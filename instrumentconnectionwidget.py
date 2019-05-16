@@ -5,14 +5,14 @@ from PyQt5.QtWidgets import QWidget
 from instrumentwidget import InstrumentWidget
 
 
-class InstrumentControllerWidget(QWidget):
+class InstrumentConnectionWidget(QWidget):
 
     connected = pyqtSignal()
 
     def __init__(self, parent=None, controller=None):
         super().__init__(parent=parent)
 
-        self._ui = uic.loadUi('D:\work\python\multiplier-i1\instrumentcontrollerwidget.ui', self)
+        self._ui = uic.loadUi('instrumentconnectionwidget.ui', self)
         self._controller = controller
 
         self._widgets = {
