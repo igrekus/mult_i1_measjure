@@ -85,6 +85,7 @@ class InstrumentController(QObject):
         }
 
         self._instruments = {}
+        self.found = False
 
     def __str__(self):
         return f'{self._instruments}'
@@ -93,7 +94,8 @@ class InstrumentController(QObject):
         print(f'searching for {addrs}')
         for k, v in addrs.items():
             self.requiredInstruments[k].addr = v
-        return self._find()
+        self.found = self._find()
+        # time.sleep(5)
 
     def _find(self):
         self._instruments = {

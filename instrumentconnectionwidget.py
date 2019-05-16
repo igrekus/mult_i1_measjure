@@ -1,8 +1,22 @@
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QWidget
 
 from instrumentwidget import InstrumentWidget
+
+
+class ConnectTask(QRunnable):
+
+    def __init__(self, fn, end, *args, **kwargs):
+        super().__init__()
+        self.fn = fn
+        self.end = end
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        self.fn(*self.args, **self.kwargs)
+        self.end()
 
 
 class InstrumentConnectionWidget(QWidget):
@@ -14,6 +28,7 @@ class InstrumentConnectionWidget(QWidget):
 
         self._ui = uic.loadUi('instrumentconnectionwidget.ui', self)
         self._controller = controller
+        self._threads = QThreadPool()
 
         self._widgets = {
             k: InstrumentWidget(parent=self, title=f'{k}', addr=f'{v.addr}')
@@ -30,8 +45,13 @@ class InstrumentConnectionWidget(QWidget):
     def on_btnConnect_clicked(self):
         print('connect')
 
-        if not self._controller.connect({k: w.address for k, w in self._widgets.items()}):
-            print('connect error check connection')
+        self._threads.start(ConnectTask(self._controller.connect,
+                                        self.connectTaskComplete,
+                                        {k: w.address for k, w in self._widgets.items()}))
+
+    def connectTaskComplete(self):
+        if not self._controller.found:
+            print('connect error, check connection')
             return
 
         for w, s in zip(self._widgets.values(), self._controller.status):
