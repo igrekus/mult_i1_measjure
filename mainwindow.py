@@ -22,15 +22,16 @@ class MainWindow(QMainWindow):
         # create instance variables
         self._ui = uic.loadUi('mainwindow.ui', self)
         self._instrumentController = InstrumentController(parent=self)
-        self._instrumentControllerWidget = ConnectionWidget(parent=self, controller=self._instrumentController)
+        self._connectionWidget = ConnectionWidget(parent=self, controller=self._instrumentController)
+
 
         # init UI
-        self._ui.layInstrs.insertWidget(0, self._instrumentControllerWidget)
+        self._ui.layInstrs.insertWidget(0, self._connectionWidget)
 
         self.initDialog()
 
     def initDialog(self):
-        self._instrumentControllerWidget.connected.connect(self.on_instrumens_connected)
+        self._connectionWidget.connected.connect(self.on_instrumens_connected)
         self.refreshView()
 
     # UI utility methods
