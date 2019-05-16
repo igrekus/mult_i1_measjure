@@ -19,14 +19,14 @@ class ConnectTask(QRunnable):
         self.end()
 
 
-class InstrumentConnectionWidget(QWidget):
+class ConnectionWidget(QWidget):
 
     connected = pyqtSignal()
 
     def __init__(self, parent=None, controller=None):
         super().__init__(parent=parent)
 
-        self._ui = uic.loadUi('instrumentconnectionwidget.ui', self)
+        self._ui = uic.loadUi('connectionwidget.ui', self)
         self._controller = controller
         self._threads = QThreadPool()
 

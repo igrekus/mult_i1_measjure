@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QMainWindow, QMessageBox, QDialog, QAction
 from PyQt5.QtCore import Qt, QStateMachine, QState, pyqtSignal, pyqtSlot
 
 from instrumentcontroller import InstrumentController
-from instrumentconnectionwidget import InstrumentConnectionWidget
+from connectionwidget import ConnectionWidget
 from measuremodel import MeasureModel
 
 
@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         # create instance variables
         self._ui = uic.loadUi('mainwindow.ui', self)
         self._instrumentController = InstrumentController(parent=self)
-        self._instrumentControllerWidget = InstrumentConnectionWidget(parent=self, controller=self._instrumentController)
+        self._instrumentControllerWidget = ConnectionWidget(parent=self, controller=self._instrumentController)
 
         # init UI
         self._ui.layInstrs.insertWidget(0, self._instrumentControllerWidget)
