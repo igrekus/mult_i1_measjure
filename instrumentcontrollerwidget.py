@@ -34,9 +34,6 @@ class InstrumentControllerWidget(QWidget):
             print('connect error check connection')
             return
 
-        self.connected.emit()
         for w, s in zip(self._widgets.values(), self._controller.status):
             w.status = s
-
-
-
+        self.connected.emit()
