@@ -86,6 +86,7 @@ class InstrumentController(QObject):
 
         self._instruments = {}
         self.found = False
+        self.present = False
 
     def __str__(self):
         return f'{self._instruments}'
@@ -102,6 +103,15 @@ class InstrumentController(QObject):
             k: v.find() for k, v in self.requiredInstruments.items()
         }
         return all(self._instruments.values())
+
+    def check(self, params):
+        print(f'checking sample {params}')
+        self.present = self._check()
+        time.sleep(3)
+        print('sample pass')
+
+    def _check(self):
+        return True
 
     @property
     def status(self):
@@ -162,7 +172,7 @@ class InstrumentController(QObject):
         return True
 
     # TODO implement proper measurement algorithm
-    def measure(self, letter):
+    def _measure(self, letter):
         print(f'start measure letter={letter}')
 
         self.measureTask(letter)
