@@ -87,6 +87,7 @@ class InstrumentController(QObject):
         self._instruments = {}
         self.found = False
         self.present = False
+        self.hasResult = False
 
     def __str__(self):
         return f'{self._instruments}'
@@ -110,6 +111,14 @@ class InstrumentController(QObject):
         print('sample pass')
 
     def _check(self):
+        # time.sleep(3)
+        return True
+
+    def measure(self, params):
+        print(f'measuring {params}')
+        self.hasResult = self._ref_measure()
+
+    def _ref_measure(self):
         # time.sleep(3)
         return True
 

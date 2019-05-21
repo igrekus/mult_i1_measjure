@@ -44,6 +44,20 @@ class MeasureWidget(QWidget):
 
     def measure(self):
         print('measuring...')
+        self._modeDuringMeasure()
+        self._threads.start(MeasureTask(self._controller.measure,
+                                        self.measureTaskComplete,
+                                        {'params': 'parampampams'}))
+
+    def measureTaskComplete(self):
+        print('measure complete')
+        # TODO check if measure completed successfully?
+        if not self._controller.hasResult:
+            print('error during measurement')
+            return
+
+        print('processing measure results')
+        self._modePreCheck()
 
     @pyqtSlot()
     def on_instrumentsConnected(self):
@@ -57,11 +71,7 @@ class MeasureWidget(QWidget):
     @pyqtSlot()
     def on_btnMeasure_clicked(self):
         print('start measure')
-
         self.measure()
-
-        print('measure complete')
-        self._modePreCheck()
 
     def _modePreConnect(self):
         self._ui.btnCheck.setEnabled(False)
@@ -79,3 +89,7 @@ class MeasureWidget(QWidget):
     def _modePreMeasure(self):
         self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(True)
+
+    def _modeDuringMeasure(self):
+        self._ui.btnCheck.setEnabled(False)
+        self._ui.btnMeasure.setEnabled(False)
