@@ -107,10 +107,10 @@ class InstrumentController(QObject):
     def check(self, params):
         print(f'checking sample {params}')
         self.present = self._check()
-        time.sleep(3)
         print('sample pass')
 
     def _check(self):
+        # time.sleep(3)
         return True
 
     @property
