@@ -84,6 +84,12 @@ class InstrumentController(QObject):
             # 'Генератор2': GeneratorFactory('GPIB0::5::INSTR')
         }
 
+        self.deviceParams = {
+            'Литера 1': {'param': 'parampampam 1'},
+            'Литера 2': {'param': 'parampampam 2'},
+            # 'Литера 3': {'param': 'parampampam 3'}
+        }
+
         self._instruments = {}
         self.found = False
         self.present = False

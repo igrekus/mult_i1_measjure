@@ -2,6 +2,8 @@ from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QRunnable, QThreadPool
 from PyQt5.QtWidgets import QWidget
 
+from deviceselectwidget import DeviceSelectWidget
+
 
 class MeasureTask(QRunnable):
 
@@ -26,12 +28,18 @@ class MeasureWidget(QWidget):
         self._controller = controller
         self._threads = QThreadPool()
 
+        self._devices = DeviceSelectWidget(parent=self, params=self._controller.deviceParams)
+        self._ui.layParams.insertWidget(0, self._devices)
+        self._devices.selectedChanged.connect(self.on_selectedChanged)
+
+        self._selectedParams = self._controller.deviceParams[self._devices.selected]
+
     def check(self):
         print('checking...')
         self._modeDuringCheck()
         self._threads.start(MeasureTask(self._controller.check,
                                         self.checkTaskComplete,
-                                        {'params': 'parampampams'}))
+                                        self._selectedParams))
 
     def checkTaskComplete(self):
         print('check complete')
@@ -47,7 +55,7 @@ class MeasureWidget(QWidget):
         self._modeDuringMeasure()
         self._threads.start(MeasureTask(self._controller.measure,
                                         self.measureTaskComplete,
-                                        {'params': 'parampampams'}))
+                                        self._selectedParams))
 
     def measureTaskComplete(self):
         print('measure complete')
@@ -72,6 +80,10 @@ class MeasureWidget(QWidget):
     def on_btnMeasure_clicked(self):
         print('start measure')
         self.measure()
+
+    @pyqtSlot(str)
+    def on_selectedChanged(self, value):
+        self._selectedParams = self._controller.deviceParams[value]
 
     def _modePreConnect(self):
         self._ui.btnCheck.setEnabled(False)
