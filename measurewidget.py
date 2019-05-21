@@ -27,7 +27,7 @@ class MeasureWidget(QWidget):
         self._threads = QThreadPool()
 
     def check(self):
-        print('connect')
+        print('checking...')
         self._modeDuringCheck()
         self._threads.start(MeasureTask(self._controller.check,
                                         self.checkTaskComplete,
