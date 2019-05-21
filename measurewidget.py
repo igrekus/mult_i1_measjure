@@ -28,6 +28,7 @@ class MeasureWidget(QWidget):
 
     def check(self):
         print('connect')
+        self._modeDuringCheck()
         self._threads.start(MeasureTask(self._controller.check,
                                         self.checkTaskComplete,
                                         {'params': 'parampampams'}))
@@ -69,6 +70,10 @@ class MeasureWidget(QWidget):
 
     def _modePreCheck(self):
         self._ui.btnCheck.setEnabled(True)
+        self._ui.btnMeasure.setEnabled(False)
+
+    def _modeDuringCheck(self):
+        self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(False)
 
     def _modePreMeasure(self):
