@@ -88,20 +88,24 @@ class MeasureWidget(QWidget):
     def _modePreConnect(self):
         self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(False)
-        # TODO also update param widgets
+        self._devices.enabled = True
 
     def _modePreCheck(self):
         self._ui.btnCheck.setEnabled(True)
         self._ui.btnMeasure.setEnabled(False)
+        self._devices.enabled = True
 
     def _modeDuringCheck(self):
         self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(False)
+        self._devices.enabled = False
 
     def _modePreMeasure(self):
         self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(True)
+        self._devices.enabled = False
 
     def _modeDuringMeasure(self):
         self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(False)
+        self._devices.enabled = False

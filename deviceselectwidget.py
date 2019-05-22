@@ -21,6 +21,8 @@ class DeviceSelectWidget(QWidget):
         self._group.button(0).setChecked(True)
         self._group.buttonToggled[int, bool].connect(self.on_buttonToggled)
 
+        self._enabled = True
+
     @property
     def selected(self):
         return self._group.checkedButton().text()
@@ -29,3 +31,13 @@ class DeviceSelectWidget(QWidget):
     def on_buttonToggled(self, id, toggled):
         if toggled:
             self.selectedChanged.emit(self._group.button(id).text())
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool):
+        self._enabled = value
+        for b in self._group.buttons():
+            b.setEnabled(self._enabled)
