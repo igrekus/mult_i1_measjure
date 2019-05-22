@@ -61,6 +61,15 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <attribute name="horizontalHeaderHighlightSections">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderHighlightSections">
+       <bool>false</bool>
+      </attribute>
      </widget>
     </item>
    </layout>
@@ -114,7 +123,4 @@
    </hints>
   </connection>
  </connections>
- <buttongroups>
-  <buttongroup name="bgrpLetter"/>
- </buttongroups>
 </ui>
