@@ -25,16 +25,21 @@ class MainWindow(QMainWindow):
         self._instrumentController = InstrumentController(parent=self)
         self._connectionWidget = ConnectionWidget(parent=self, controller=self._instrumentController)
         self._measureWidget = MeasureWidget(parent=self, controller=self._instrumentController)
+        self._measureModel = MeasureModel(parent=self, controller=self._instrumentController)
 
         # init UI
         self._ui.layInstrs.insertWidget(0, self._connectionWidget)
         self._ui.layInstrs.insertWidget(1, self._measureWidget)
 
-        self.initDialog()
+        self._init()
 
-    def initDialog(self):
+    def _init(self):
         self._connectionWidget.connected.connect(self.on_instrumens_connected)
         self._connectionWidget.connected.connect(self._measureWidget.on_instrumentsConnected)
+
+        self._measureWidget.measureComplete.connect(self._measureModel.update)
+
+        self._ui.tableMeasure.setModel(self._measureModel)
 
         self.refreshView()
 

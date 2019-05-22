@@ -21,6 +21,9 @@ class MeasureTask(QRunnable):
 
 class MeasureWidget(QWidget):
 
+    sampleFound = pyqtSignal()
+    measureComplete = pyqtSignal()
+
     def __init__(self, parent=None, controller=None):
         super().__init__(parent=parent)
 
@@ -49,6 +52,7 @@ class MeasureWidget(QWidget):
 
         print('found sample')
         self._modePreMeasure()
+        self.sampleFound.emit()
 
     def measure(self):
         print('measuring...')
@@ -66,6 +70,7 @@ class MeasureWidget(QWidget):
 
         print('processing measure results')
         self._modePreCheck()
+        self.measureComplete.emit()
 
     @pyqtSlot()
     def on_instrumentsConnected(self):
