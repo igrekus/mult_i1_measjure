@@ -35,14 +35,14 @@ class MeasureWidget(QWidget):
         self._ui.layParams.insertWidget(0, self._devices)
         self._devices.selectedChanged.connect(self.on_selectedChanged)
 
-        self._selectedParams = self._controller.deviceParams[self._devices.selected]
+        self._selectedDevice = self._devices.selected
 
     def check(self):
         print('checking...')
         self._modeDuringCheck()
         self._threads.start(MeasureTask(self._controller.check,
                                         self.checkTaskComplete,
-                                        self._selectedParams))
+                                        self._selectedDevice))
 
     def checkTaskComplete(self):
         print('check complete')
@@ -59,7 +59,7 @@ class MeasureWidget(QWidget):
         self._modeDuringMeasure()
         self._threads.start(MeasureTask(self._controller.measure,
                                         self.measureTaskComplete,
-                                        self._selectedParams))
+                                        self._selectedDevice))
 
     def measureTaskComplete(self):
         print('measure complete')
@@ -87,7 +87,7 @@ class MeasureWidget(QWidget):
 
     @pyqtSlot(str)
     def on_selectedChanged(self, value):
-        self._selectedParams = self._controller.deviceParams[value]
+        self._selectedDevice = value
 
     def _modePreConnect(self):
         self._ui.btnCheck.setEnabled(False)
