@@ -68,7 +68,6 @@ class MeasureWidget(QWidget):
             print('error during measurement')
             return
 
-        print('processing measure results')
         self._modePreCheck()
         self.measureComplete.emit()
 
