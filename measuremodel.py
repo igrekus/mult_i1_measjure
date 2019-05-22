@@ -2,18 +2,13 @@ from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant
 
 
 class MeasureModel(QAbstractTableModel):
-    _default_column_count = 1
-
-    _default_headers = ['№'] * _default_column_count
-
-    # TODO: read params from .xlsx
     def __init__(self, parent=None, controller=None):
         super().__init__(parent)
 
         self._controller = controller
 
         self._data = list()
-        self._headers = self._default_headers
+        self._headers = list()
 
         self._init()
 
