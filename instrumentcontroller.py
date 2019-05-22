@@ -141,6 +141,7 @@ class InstrumentController(QObject):
             # 'Генератор2': GeneratorFactory('GPIB0::5::INSTR')
         }
 
+        # TODO generate parameter list from .xlsx
         self.deviceParams = {
             'Литера 1': {'param': 'parampampam 1'},
             'Литера 2': {'param': 'parampampam 2'},
