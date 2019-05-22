@@ -1,9 +1,10 @@
+import random
 import time
-import openpyxl
-import visa
+import pandas
 
 from os import listdir
 from os.path import isfile, join
+from collections import defaultdict
 
 from PyQt5.QtCore import QObject
 
@@ -73,6 +74,62 @@ class AnalyzerFactory(InstrumentFactory):
         return An()
 
 
+class MeasureResult:
+    def __init__(self):
+        self.headers = list()
+    def _init(self):
+        raise NotImplementedError()
+    def process_raw_data(self, params, raw_data):
+        raise NotImplementedError()
+
+
+class MeasureResultMock(MeasureResult):
+    def __init__(self):
+        super().__init__()
+        self._generators = defaultdict(list)
+        self.data = list()
+
+        self._init()
+
+    def _init(self):
+        # check task table presence
+        def getFileList(data_path):
+            return [l for l in listdir(data_path) if isfile(join(data_path, l)) and '.xlsx' in l]
+
+        files = getFileList('.')
+        if len(files) != 1:
+            print('working dir should have only one task table')
+            exit(10)
+
+        self._parseTaskTable(files[0])
+
+    def _parseTaskTable(self, filename):
+        print(f'using task table: {filename}')
+
+        raw_data: pandas.DataFrame = pandas.read_excel(filename)
+
+        name, _, *self.headers = raw_data.columns.tolist()
+
+        for g in raw_data.groupby(name):
+            _, df = g
+            for h in self.headers:
+                self._generators[f'{name} {df[name].tolist()[0]}'].append(df[h].tolist())
+
+    def process_raw_data(self, device, raw_data):
+        print('processing', device, raw_data)
+        self.data = [self.generateValue(data) for data in self._generators[device]]
+
+    def generateValue(self, data):
+
+        if not data or '-' in data or chr(0x2212) in data or not all(data):
+            return '-'
+
+        span, step, mean = data
+        start = mean - span
+        stop = mean + span
+        return random.randint(0, int((stop - start) / step)) * step + start
+
+
 class InstrumentController(QObject):
 
     def __init__(self, parent=None):
@@ -95,6 +152,8 @@ class InstrumentController(QObject):
         self.present = False
         self.hasResult = False
 
+        self.result = MeasureResult() if not mock_enabled else MeasureResultMock()
+
     def __str__(self):
         return f'{self._instruments}'
 
@@ -111,8 +170,8 @@ class InstrumentController(QObject):
         }
         return all(self._instruments.values())
 
-    def check(self, params):
-        print(f'checking sample {params}')
+    def check(self, device):
+        print(f'checking sample {self.deviceParams[device]}')
         self.present = self._check()
         print('sample pass')
 
@@ -120,13 +179,17 @@ class InstrumentController(QObject):
         # time.sleep(3)
         return True
 
-    def measure(self, params):
-        print(f'measuring {params}')
-        self.hasResult = self._ref_measure()
+    def measure(self, device):
+        print(f'measuring {self.deviceParams[device]}')
+        raw_data = self._ref_measure()
+        self.hasResult = bool(raw_data)
+
+        if self.hasResult:
+            self.result.process_raw_data(device, raw_data)
 
     def _ref_measure(self):
         # time.sleep(3)
-        return True
+        return ['raw data']
 
     @property
     def status(self):
