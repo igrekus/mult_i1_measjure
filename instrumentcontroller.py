@@ -115,13 +115,17 @@ class MeasureResult:
         self.headers = list()
     def _init(self):
         raise NotImplementedError()
-    def process_raw_data(self, params, raw_data):
+    def process_raw_data(self, *args, **kwargs):
         raise NotImplementedError()
 
 
 class MeasureResultMock(MeasureResult):
-    def __init__(self):
+    def __init__(self, device, secondary):
         super().__init__()
+        self.devices: list = list(device.keys())
+        self.secondary: dict = secondary
+
+        self.headersCache = dict()
         self._generators = defaultdict(list)
         self.data = list()
 
@@ -141,19 +145,20 @@ class MeasureResultMock(MeasureResult):
 
     def _parseTaskTable(self, filename):
         print(f'using task table: {filename}')
+        for dev in self.devices:
+            raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
 
-        raw_data: pandas.DataFrame = pandas.read_excel(filename)
+            name, _, *headers = raw_data.columns.tolist()
+            self.headersCache[name] = headers
+            for g in raw_data.groupby(name):
+                _, df = g
+                for h in headers:
+                    self._generators[f'{name} {df[name].tolist()[0]}'].append(df[h].tolist())
 
-        name, _, *self.headers = raw_data.columns.tolist()
-
-        for g in raw_data.groupby(name):
-            _, df = g
-            for h in self.headers:
-                self._generators[f'{name} {df[name].tolist()[0]}'].append(df[h].tolist())
-
-    def process_raw_data(self, device, raw_data):
-        print('processing', device, raw_data)
-        self.data = [self.generateValue(data) for data in self._generators[device]]
+    def process_raw_data(self, device, secondary, raw_data):
+        print('processing', device, secondary, raw_data)
+        self.headers = self.headersCache[device]
+        self.data = [self.generateValue(data) for data in self._generators[f'{device} {secondary}']]
 
     def generateValue(self, data):
 
