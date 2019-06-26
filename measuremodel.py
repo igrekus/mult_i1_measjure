@@ -21,6 +21,7 @@ class MeasureModel(QAbstractTableModel):
         self.endResetModel()
 
     def update(self):
+        self._init()
         self.beginResetModel()
         self._data = self._controller.result.data
         self.endResetModel()

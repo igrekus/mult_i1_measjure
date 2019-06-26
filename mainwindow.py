@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QStateMachine, QState, pyqtSignal, pyqtSlot
 from instrumentcontroller import InstrumentController
 from connectionwidget import ConnectionWidget
 from measuremodel import MeasureModel
-from measurewidget import MeasureWidget
+from measurewidget import MeasureWidget, MeasureWidgetWithSecondaryParameters
 
 
 class MainWindow(QMainWindow):
@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         self._ui = uic.loadUi('mainwindow.ui', self)
         self._instrumentController = InstrumentController(parent=self)
         self._connectionWidget = ConnectionWidget(parent=self, controller=self._instrumentController)
-        self._measureWidget = MeasureWidget(parent=self, controller=self._instrumentController)
+        self._measureWidget = MeasureWidgetWithSecondaryParameters(parent=self, controller=self._instrumentController)
         self._measureModel = MeasureModel(parent=self, controller=self._instrumentController)
 
         # init UI

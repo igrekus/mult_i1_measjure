@@ -1,6 +1,7 @@
 import random
 import time
 import pandas
+import visa
 
 from os import listdir
 from os.path import isfile, join
@@ -16,23 +17,24 @@ from PyQt5.QtCore import QObject
 # from sourcemock import SourceMock
 
 # MOCK
+from agilent34410amock import Agilent34410AMock
+from agilente3644amock import AgilentE3644AMock
+from agilentn5183amock import AgilentN5183AMock
+from agilentn9030amock import AgilentN9030AMock
+from instr.agilent34410a import Agilent34410A
+from instr.agilente3644a import AgilentE3644A
+from instr.agilentn5183a import AgilentN5183A
+from instr.agilentn9030a import AgilentN9030A
+
 mock_enabled = True
 
 
-class Gen:
-    addr = 'gen addr'
-    model = 'Gen'
+class Src:
+    addr = 'src addr'
+    model = 'Src'
     status = f'{model} at {addr}'
     def __str__(self):
-        return 'Gen'
-
-
-class An:
-    addr = 'an addr'
-    model = 'An'
-    status = f'{model} at {addr}'
-    def __str__(self):
-        return 'An'
+        return 'Src'
 
 
 class InstrumentFactory:
@@ -40,7 +42,6 @@ class InstrumentFactory:
         self.applicable = None
         self.addr = addr
         self.label = label
-        # self.rm = visa.ResourceManager()
     def find(self):
         # TODO remove applicable instrument when found one if needed more than one instrument of the same type
         # TODO: idea: pass list of applicable instruments to differ from the model of the same type?
@@ -51,47 +52,109 @@ class InstrumentFactory:
     def from_address(self):
         raise NotImplementedError()
     def try_find(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class GeneratorFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Генератор')
-        self.applicable = ['E4438C', 'N5181B', 'N5183A']
+        self.applicable = ['N5183A']
     def from_address(self):
-        return Gen()
-    def try_find(self):
-        return Gen()
+        if mock_enabled:
+            return AgilentN5183A(self.addr, '1,N5183A mock,1', AgilentN5183AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentN5183A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Generator find error:', ex)
+            exit(1)
 
 
 class AnalyzerFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Анализатор')
-        self.applicable = ['Obzor 304', 'DSA90604A']
+        self.applicable = ['N9030A']
     def from_address(self):
-        return An()
-    def try_find(self):
-        return An()
+        if mock_enabled:
+            return AgilentN9030A(self.addr, '1,N9030A mock,1', AgilentN9030AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentN9030A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Analyzer find error:', ex)
+            exit(2)
+
+
+class MultimeterFactory(InstrumentFactory):
+    def __init__(self, addr):
+        super().__init__(addr=addr, label='Мультиметр')
+        self.applicable = ['34410A']
+    def from_address(self):
+        if mock_enabled:
+            return Agilent34410A(self.addr, '1,34410A mock,1', Agilent34410AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return Agilent34410A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Multimeter find error:', ex)
+            exit(3)
+
+
+class SourceFactory(InstrumentFactory):
+    def __init__(self, addr):
+        super().__init__(addr=addr, label='Исчточник питания')
+        self.applicable = ['SRC MODEL']
+    def from_address(self):
+        if mock_enabled:
+            return AgilentE3644A(self.addr, '1,SRC MODEL mock,1', AgilentE3644AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentE3644A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Source find error:', ex)
+            exit(4)
 
 
 class MeasureResult:
     def __init__(self):
         self.headers = list()
-    def _init(self):
+    def init(self):
         raise NotImplementedError()
-    def process_raw_data(self, params, raw_data):
+    def process_raw_data(self, *args, **kwargs):
         raise NotImplementedError()
 
 
 class MeasureResultMock(MeasureResult):
-    def __init__(self):
+    def __init__(self, device, secondary):
         super().__init__()
+        self.devices: list = list(device.keys())
+        self.secondary: dict = secondary
+
+        self.headersCache = dict()
         self._generators = defaultdict(list)
         self.data = list()
 
-        self._init()
+    def init(self):
+        self.headersCache.clear()
+        self._generators.clear()
+        self.data.clear()
 
-    def _init(self):
         # check task table presence
         def getFileList(data_path):
             return [l for l in listdir(data_path) if isfile(join(data_path, l)) and '.xlsx' in l]
@@ -99,25 +162,26 @@ class MeasureResultMock(MeasureResult):
         files = getFileList('.')
         if len(files) != 1:
             print('working dir should have only one task table')
-            exit(10)
+            return False
 
         self._parseTaskTable(files[0])
+        return True
 
     def _parseTaskTable(self, filename):
         print(f'using task table: {filename}')
+        for dev in self.devices:
+            raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
+            name, _, *headers = raw_data.columns.tolist()
+            self.headersCache[name] = headers
+            for g in raw_data.groupby(name):
+                _, df = g
+                for h in headers:
+                    self._generators[f'{name} {df[name].tolist()[0]}'].append(df[h].tolist())
 
-        raw_data: pandas.DataFrame = pandas.read_excel(filename)
-
-        name, _, *self.headers = raw_data.columns.tolist()
-
-        for g in raw_data.groupby(name):
-            _, df = g
-            for h in self.headers:
-                self._generators[f'{name} {df[name].tolist()[0]}'].append(df[h].tolist())
-
-    def process_raw_data(self, device, raw_data):
-        print('processing', device, raw_data)
-        self.data = [self.generateValue(data) for data in self._generators[device]]
+    def process_raw_data(self, device, secondary, raw_data):
+        print('processing', device, secondary, raw_data)
+        self.headers = self.headersCache[device]
+        self.data = [self.generateValue(data) for data in self._generators[f'{device} {secondary}']]
 
     def generateValue(self, data):
 
@@ -136,16 +200,53 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Анализатор': AnalyzerFactory('GPIB0::10::INSTR'),
-            'Генератор1': GeneratorFactory('GPIB0::5::INSTR'),
-            # 'Генератор2': GeneratorFactory('GPIB0::5::INSTR')
+            'Источник питания': SourceFactory('GPIB0::10::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB0::11::INSTR'),
+            'Генератор': GeneratorFactory('GPIB0::12::INSTR'),
+            'Анализатор': AnalyzerFactory('GPIB0::5::INSTR'),
         }
 
         # TODO generate parameter list from .xlsx
         self.deviceParams = {
-            'Литера 1': {'param': 'parampampam 1'},
-            'Литера 2': {'param': 'parampampam 2'},
-            # 'Литера 3': {'param': 'parampampam 3'}
+            'Тип 1 (1324ПП11У)': {
+                'F': [0.6, 0.75, 0.89, 1.04, 1.18, 1.33, 1.47, 1.62, 1.76, 1.9, 2.20],
+                'test_mul': 2,
+                'P1': 13,
+                'P2': 21,
+                'Istat': [None, None, None],
+                'Idyn': [None, None, None]
+            },
+            'Тип 5 (1324ПП15У)': {
+                'F': [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6],
+                'test_mul': 3,
+                'P1': 13,
+                'P2': 21,
+                'Istat': [None, None, None],
+                'Idyn': [None, None, None]
+            },
+            'Тип 12 (1324ПП19У)': {
+                'F': [1.2, 1.35, 1.5, 1.65, 1.8, 1.95, 2.1, 2.25, 2.4, 2.55, 2.8],
+                'test_mul': 4,
+                'P1': 0,
+                'P2': 7,
+                'Istat': [(160, 170), (123, 125), (220, 230)],
+                'Idyn': [(130, 140), (110, 120), (200, 215)]
+            },
+            'Тип 1а (1324ПП23У)': {
+                'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
+                'test_mul': 2,
+                'P1': 13,
+                'P2': 21,
+                'Istat': [(220, 230), (170, 190), (240, 250)],
+                'Idyn': [(200, 210), (155, 165), (220, 230)]
+            },
+        }
+
+        # TODO generate combo for secondary params
+        self.secondaryParams = {
+            0: 0,
+            1: 1,
+            2: 2
         }
 
         self._instruments = {}
@@ -153,7 +254,8 @@ class InstrumentController(QObject):
         self.present = False
         self.hasResult = False
 
-        self.result = MeasureResult() if not mock_enabled else MeasureResultMock()
+        self.result = MeasureResult() if not mock_enabled \
+            else MeasureResultMock(self.deviceParams, self.secondaryParams)
 
     def __str__(self):
         return f'{self._instruments}'
@@ -171,24 +273,57 @@ class InstrumentController(QObject):
         }
         return all(self._instruments.values())
 
-    def check(self, device):
-        print(f'checking sample {self.deviceParams[device]}')
-        self.present = self._check()
+    def check(self, params):
+        print(f'call check with {params}')
+        device, secondary = params
+        self.present = self._check(device, secondary)
         print('sample pass')
 
-    def _check(self):
-        # time.sleep(3)
-        return True
+    def _check(self, device, secondary):
+        print(f'launch check with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
+        return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
 
-    def measure(self, device):
-        print(f'measuring {self.deviceParams[device]}')
-        raw_data = self._ref_measure()
+    def _runCheck(self, param, secondary):
+        threshold = -5
+
+        if param['Istat'][0] is not None:
+            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
+            self._instruments['Источник питания'].set_voltage(chan=1, value=5, unit='V')
+            self._instruments['Источник питания'].set_output(chan=1, state='ON')
+
+        self._instruments['Генератор'].set_modulation(state='OFF')
+        self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+        self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
+        self._instruments['Генератор'].set_output(state='ON')
+
+        self._instruments['Анализатор'].set_autocalibrate(state='OFF')
+        self._instruments['Анализатор'].set_span(value=1, unit='MHz')
+
+        center_freq = param['F'][6] * param['test_mul']
+        self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
+        self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+        pow = self._instruments['Анализатор'].read_pow(marker=1)
+
+        self._instruments['Анализатор'].remove_marker(marker=1)
+        self._instruments['Анализатор'].set_autocalibrate(state='ON')
+        self._instruments['Генератор'].set_output(state='OFF')
+        self._instruments['Источник питания'].set_output(chan=1, state='OFF')
+
+        print('smaple response:', pow)
+        return pow > threshold
+
+    def measure(self, params):
+        print(f'call measure with {params}')
+        device, secondary = params
+        raw_data = self._ref_measure(device, secondary)
         self.hasResult = bool(raw_data)
 
         if self.hasResult:
-            self.result.process_raw_data(device, raw_data)
+            self.result.process_raw_data(device, secondary, raw_data)
 
-    def _ref_measure(self):
+    def _ref_measure(self, device, secondary):
+        print(f'launch measure with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
+        # TODO implement actual measure algorithm
         # time.sleep(3)
         return ['raw data']
 
