@@ -119,7 +119,7 @@ class MeasureWidgetWithSecondaryParameters(MeasureWidget):
     def __init__(self, parent=None, controller=None):
         super().__init__(parent=parent, controller=controller)
 
-        self._paramLabel = QLabel('Контроль норм')
+        self._paramLabel = QLabel('Калибровка')
         self._paramCombo = QComboBox(parent=self)
         self._paramCombo.addItems(['Комнатная температура', '+125 ºС', '-60 ºС'])
         self._ui.layParams.insertWidget(1, self._paramCombo)
