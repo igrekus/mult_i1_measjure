@@ -177,16 +177,25 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Анализатор': AnalyzerFactory('GPIB0::10::INSTR'),
-            'Генератор1': GeneratorFactory('GPIB0::5::INSTR'),
-            # 'Генератор2': GeneratorFactory('GPIB0::5::INSTR')
+            'Источник питания': SourceFactory('GPIB0::10::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB0::11::INSTR'),
+            'Генератор': GeneratorFactory('GPIB0::12::INSTR'),
+            'Анализатор': AnalyzerFactory('GPIB0::5::INSTR'),
         }
 
         # TODO generate parameter list from .xlsx
         self.deviceParams = {
-            'Литера 1': {'param': 'parampampam 1'},
-            'Литера 2': {'param': 'parampampam 2'},
-            # 'Литера 3': {'param': 'parampampam 3'}
+            'Тип 1 (1324ПП11У)': {'param': 'parampampam 1'},
+            'Тип 5 (1324ПП15У)': {'param': 'parampampam 2'},
+            'Тип 12 (1324ПП19У)': {'param': 'parampampam 3'},
+            'Тип 1а (1324ПП23У)': {'param': 'parampampam 4'},
+        }
+
+        # TODO generate combo for secondary params
+        self.secondaryParams = {
+            0: {'p': '1'},
+            1: {'p': '2'},
+            2: {'p', '3'}
         }
 
         self._instruments = {}
@@ -194,7 +203,8 @@ class InstrumentController(QObject):
         self.present = False
         self.hasResult = False
 
-        self.result = MeasureResult() if not mock_enabled else MeasureResultMock()
+        self.result = MeasureResult() if not mock_enabled \
+            else MeasureResultMock(self.deviceParams, self.secondaryParams)
 
     def __str__(self):
         return f'{self._instruments}'
@@ -212,24 +222,30 @@ class InstrumentController(QObject):
         }
         return all(self._instruments.values())
 
-    def check(self, device):
-        print(f'checking sample {self.deviceParams[device]}')
-        self.present = self._check()
+    def check(self, params):
+        print(f'call check with {params}')
+        device, secondary = params
+        self.present = self._check(device, secondary)
         print('sample pass')
 
-    def _check(self):
+    def _check(self, device, secondary):
+        print(f'launch measure with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
+        # TODO implement actual check algorithm
         # time.sleep(3)
         return True
 
-    def measure(self, device):
-        print(f'measuring {self.deviceParams[device]}')
-        raw_data = self._ref_measure()
+    def measure(self, params):
+        print(f'call measure with {params}')
+        device, secondary = params
+        raw_data = self._ref_measure(device, secondary)
         self.hasResult = bool(raw_data)
 
         if self.hasResult:
-            self.result.process_raw_data(device, raw_data)
+            self.result.process_raw_data(device, secondary, raw_data)
 
-    def _ref_measure(self):
+    def _ref_measure(self, device, secondary):
+        print(f'launch measure with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
+        # TODO implement actual measure algorithm
         # time.sleep(3)
         return ['raw data']
 
