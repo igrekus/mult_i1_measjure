@@ -1,6 +1,7 @@
 import random
 import time
 import pandas
+import visa
 
 from os import listdir
 from os.path import isfile, join
@@ -16,31 +17,16 @@ from PyQt5.QtCore import QObject
 # from sourcemock import SourceMock
 
 # MOCK
+from agilent34410amock import Agilent34410AMock
+from agilente3644amock import AgilentE3644AMock
+from agilentn5183amock import AgilentN5183AMock
+from agilentn9030amock import AgilentN9030AMock
+from instr.agilent34410a import Agilent34410A
+from instr.agilente3644a import AgilentE3644A
+from instr.agilentn5183a import AgilentN5183A
+from instr.agilentn9030a import AgilentN9030A
+
 mock_enabled = True
-
-
-class Gen:
-    addr = 'gen addr'
-    model = 'Gen'
-    status = f'{model} at {addr}'
-    def __str__(self):
-        return 'Gen'
-
-
-class An:
-    addr = 'an addr'
-    model = 'An'
-    status = f'{model} at {addr}'
-    def __str__(self):
-        return 'An'
-
-
-class Mult:
-    addr = 'mult addr'
-    model = 'Mult'
-    status = f'{model} at {addr}'
-    def __str__(self):
-        return 'Mult'
 
 
 class Src:
@@ -56,7 +42,6 @@ class InstrumentFactory:
         self.applicable = None
         self.addr = addr
         self.label = label
-        # self.rm = visa.ResourceManager()
     def find(self):
         # TODO remove applicable instrument when found one if needed more than one instrument of the same type
         # TODO: idea: pass list of applicable instruments to differ from the model of the same type?
@@ -67,27 +52,45 @@ class InstrumentFactory:
     def from_address(self):
         raise NotImplementedError()
     def try_find(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
 class GeneratorFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Генератор')
-        self.applicable = ['E4438C', 'N5181B', 'N5183A']
+        self.applicable = ['N5183A']
     def from_address(self):
-        return Gen()
-    def try_find(self):
-        return Gen()
+        if mock_enabled:
+            return AgilentN5183A(self.addr, '1,N5183A mock,1', AgilentN5183AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentN5183A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Generator find error:', ex)
+            exit(1)
 
 
 class AnalyzerFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Анализатор')
-        self.applicable = ['N9030А']
+        self.applicable = ['N9030A']
     def from_address(self):
-        return An()
-    def try_find(self):
-        return An()
+        if mock_enabled:
+            return AgilentN9030A(self.addr, '1,N9030A mock,1', AgilentN9030AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentN9030A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Analyzer find error:', ex)
+            exit(2)
 
 
 class MultimeterFactory(InstrumentFactory):
@@ -95,25 +98,43 @@ class MultimeterFactory(InstrumentFactory):
         super().__init__(addr=addr, label='Мультиметр')
         self.applicable = ['34410A']
     def from_address(self):
-        return Mult()
-    def try_find(self):
-        return Mult()
+        if mock_enabled:
+            return Agilent34410A(self.addr, '1,34410A mock,1', Agilent34410AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return Agilent34410A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Multimeter find error:', ex)
+            exit(3)
 
 
 class SourceFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Исчточник питания')
-        self.applicable = ['34410A']
+        self.applicable = ['SRC MODEL']
     def from_address(self):
-        return Src()
-    def try_find(self):
-        return Src()
+        if mock_enabled:
+            return AgilentE3644A(self.addr, '1,SRC MODEL mock,1', AgilentE3644AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentE3644A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Source find error:', ex)
+            exit(4)
 
 
 class MeasureResult:
     def __init__(self):
         self.headers = list()
-    def _init(self):
+    def init(self):
         raise NotImplementedError()
     def process_raw_data(self, *args, **kwargs):
         raise NotImplementedError()
