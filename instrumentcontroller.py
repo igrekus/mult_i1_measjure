@@ -35,6 +35,22 @@ class An:
         return 'An'
 
 
+class Mult:
+    addr = 'mult addr'
+    model = 'Mult'
+    status = f'{model} at {addr}'
+    def __str__(self):
+        return 'Mult'
+
+
+class Src:
+    addr = 'src addr'
+    model = 'Src'
+    status = f'{model} at {addr}'
+    def __str__(self):
+        return 'Src'
+
+
 class InstrumentFactory:
     def __init__(self, addr, label):
         self.applicable = None
@@ -67,11 +83,31 @@ class GeneratorFactory(InstrumentFactory):
 class AnalyzerFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Анализатор')
-        self.applicable = ['Obzor 304', 'DSA90604A']
+        self.applicable = ['N9030А']
     def from_address(self):
         return An()
     def try_find(self):
         return An()
+
+
+class MultimeterFactory(InstrumentFactory):
+    def __init__(self, addr):
+        super().__init__(addr=addr, label='Мультиметр')
+        self.applicable = ['34410A']
+    def from_address(self):
+        return Mult()
+    def try_find(self):
+        return Mult()
+
+
+class SourceFactory(InstrumentFactory):
+    def __init__(self, addr):
+        super().__init__(addr=addr, label='Исчточник питания')
+        self.applicable = ['34410A']
+    def from_address(self):
+        return Src()
+    def try_find(self):
+        return Src()
 
 
 class MeasureResult:
