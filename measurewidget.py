@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QRunnable, QThreadPool
-from PyQt5.QtWidgets import QWidget, QComboBox, QLabel
+from PyQt5.QtWidgets import QWidget, QComboBox, QLabel, QMessageBox
 
 from deviceselectwidget import DeviceSelectWidget
 
@@ -48,6 +48,8 @@ class MeasureWidget(QWidget):
         print('check complete')
         if not self._controller.present:
             print('sample not found')
+            # QMessageBox.information(self, 'Ошибка', 'Не удалось найти образец, проверьте подключение')
+            self._modePreCheck()
             return
 
         print('found sample')
