@@ -150,9 +150,11 @@ class MeasureResultMock(MeasureResult):
         self._generators = defaultdict(list)
         self.data = list()
 
-        self._init()
+    def init(self):
+        self.headersCache.clear()
+        self._generators.clear()
+        self.data.clear()
 
-    def _init(self):
         # check task table presence
         def getFileList(data_path):
             return [l for l in listdir(data_path) if isfile(join(data_path, l)) and '.xlsx' in l]
@@ -160,15 +162,15 @@ class MeasureResultMock(MeasureResult):
         files = getFileList('.')
         if len(files) != 1:
             print('working dir should have only one task table')
-            exit(10)
+            return False
 
         self._parseTaskTable(files[0])
+        return True
 
     def _parseTaskTable(self, filename):
         print(f'using task table: {filename}')
         for dev in self.devices:
             raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
-
             name, _, *headers = raw_data.columns.tolist()
             self.headersCache[name] = headers
             for g in raw_data.groupby(name):
@@ -206,17 +208,45 @@ class InstrumentController(QObject):
 
         # TODO generate parameter list from .xlsx
         self.deviceParams = {
-            'Тип 1 (1324ПП11У)': {'param': 'parampampam 1'},
-            'Тип 5 (1324ПП15У)': {'param': 'parampampam 2'},
-            'Тип 12 (1324ПП19У)': {'param': 'parampampam 3'},
-            'Тип 1а (1324ПП23У)': {'param': 'parampampam 4'},
+            'Тип 1 (1324ПП11У)': {
+                'F': [0.6, 0.75, 0.89, 1.04, 1.18, 1.33, 1.47, 1.62, 1.76, 1.9, 2.20],
+                'test_mul': 2,
+                'P1': 13,
+                'P2': 21,
+                'Istat': [None, None, None],
+                'Idyn': [None, None, None]
+            },
+            'Тип 5 (1324ПП15У)': {
+                'F': [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6],
+                'test_mul': 3,
+                'P1': 13,
+                'P2': 21,
+                'Istat': [None, None, None],
+                'Idyn': [None, None, None]
+            },
+            'Тип 12 (1324ПП19У)': {
+                'F': [1.2, 1.35, 1.5, 1.65, 1.8, 1.95, 2.1, 2.25, 2.4, 2.55, 2.8],
+                'test_mul': 4,
+                'P1': 0,
+                'P2': 7,
+                'Istat': [(160, 170), (123, 125), (220, 230)],
+                'Idyn': [(130, 140), (110, 120), (200, 215)]
+            },
+            'Тип 1а (1324ПП23У)': {
+                'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
+                'test_mul': 2,
+                'P1': 13,
+                'P2': 21,
+                'Istat': [(220, 230), (170, 190), (240, 250)],
+                'Idyn': [(200, 210), (155, 165), (220, 230)]
+            },
         }
 
         # TODO generate combo for secondary params
         self.secondaryParams = {
-            0: {'p': '1'},
-            1: {'p': '2'},
-            2: {'p', '3'}
+            0: 0,
+            1: 1,
+            2: 2
         }
 
         self._instruments = {}
@@ -250,10 +280,37 @@ class InstrumentController(QObject):
         print('sample pass')
 
     def _check(self, device, secondary):
-        print(f'launch measure with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
-        # TODO implement actual check algorithm
-        # time.sleep(3)
-        return True
+        print(f'launch check with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
+        return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
+
+    def _runCheck(self, param, secondary):
+        threshold = -5
+
+        if param['Istat'][0] is not None:
+            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
+            self._instruments['Источник питания'].set_voltage(chan=1, value=5, unit='V')
+            self._instruments['Источник питания'].set_output(chan=1, state='ON')
+
+        self._instruments['Генератор'].set_modulation(state='OFF')
+        self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+        self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
+        self._instruments['Генератор'].set_output(state='ON')
+
+        self._instruments['Анализатор'].set_autocalibrate(state='OFF')
+        self._instruments['Анализатор'].set_span(value=1, unit='MHz')
+
+        center_freq = param['F'][6] * param['test_mul']
+        self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
+        self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+        pow = self._instruments['Анализатор'].read_pow(marker=1)
+
+        self._instruments['Анализатор'].remove_marker(marker=1)
+        self._instruments['Анализатор'].set_autocalibrate(state='ON')
+        self._instruments['Генератор'].set_output(state='OFF')
+        self._instruments['Источник питания'].set_output(chan=1, state='OFF')
+
+        print('smaple response:', pow)
+        return pow > threshold
 
     def measure(self, params):
         print(f'call measure with {params}')
