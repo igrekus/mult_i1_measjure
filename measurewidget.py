@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QRunnable, QThreadPool
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QComboBox, QLabel
 
 from deviceselectwidget import DeviceSelectWidget
 
@@ -113,3 +113,55 @@ class MeasureWidget(QWidget):
         self._ui.btnCheck.setEnabled(False)
         self._ui.btnMeasure.setEnabled(False)
         self._devices.enabled = False
+
+
+class MeasureWidgetWithSecondaryParameters(MeasureWidget):
+    def __init__(self, parent=None, controller=None):
+        super().__init__(parent=parent, controller=controller)
+
+        self._paramLabel = QLabel('Контроль норм')
+        self._paramCombo = QComboBox(parent=self)
+        self._paramCombo.addItems(['Комнатная температура', '+125 ºС', '-60 ºС'])
+        self._ui.layParams.insertWidget(1, self._paramCombo)
+        self._ui.layParams.insertWidget(1, self._paramLabel)
+        self._paramCombo.currentIndexChanged.connect(self.on_paramCombo_indexChanged)
+
+        self._selectedSecondaryParam = 0
+
+    def _modePreConnect(self):
+        super()._modePreConnect()
+        self._paramCombo.setEnabled(True)
+
+    def _modePreCheck(self):
+        super()._modePreCheck()
+        self._paramCombo.setEnabled(True)
+
+    def _modeDuringCheck(self):
+        super()._modeDuringCheck()
+        self._paramCombo.setEnabled(False)
+
+    def _modePreMeasure(self):
+        super()._modePreMeasure()
+        self._paramCombo.setEnabled(False)
+
+    def _modeDuringMeasure(self):
+        super()._modeDuringMeasure()
+        self._paramCombo.setEnabled(False)
+
+    def check(self):
+        print('subclass checking...')
+        self._modeDuringCheck()
+        self._threads.start(MeasureTask(self._controller.check,
+                                        self.checkTaskComplete,
+                                        [self._selectedDevice, self._selectedSecondaryParam]))
+
+    def measure(self):
+        print('subclass measuring...')
+        self._modeDuringMeasure()
+        self._threads.start(MeasureTask(self._controller.measure,
+                                        self.measureTaskComplete,
+                                        [self._selectedDevice, self._selectedSecondaryParam]))
+
+    @pyqtSlot(int)
+    def on_paramCombo_indexChanged(self, value):
+        self._selectedSecondaryParam = value
