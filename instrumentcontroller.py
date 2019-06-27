@@ -221,16 +221,16 @@ class InstrumentController(QObject):
                 'mul': 4,
                 'P1': 0,
                 'P2': 7,
-                'Istat': [(5, 1, 165), (1, 1, 124), (5, 1, 225)],
-                'Idyn': [(5, 1, 135), (5, 1, 115), (7, 1, 207)]
+                'Istat': [(5, 0.1, 165), (1, 0.1, 124), (5, 0.1, 225)],
+                'Idyn': [(5, 0.1, 135), (5, 0.1, 115), (7, 0.1, 207)]
             },
             'Тип 1а (1324ПП23У)': {
                 'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
                 'mul': 2,
                 'P1': 13,
                 'P2': 21,
-                'Istat': [(5, 1, 225), (10, 1, 180), (5, 1, 245)],
-                'Idyn': [(5, 1, 205), (5, 1, 160), (5, 1, 225)]
+                'Istat': [(5, 0.1, 225), (10, 0.1, 180), (5, 0.1, 245)],
+                'Idyn': [(5, 0.1, 205), (5, 0.1, 160), (5, 0.1, 225)]
             },
         }
 
@@ -336,8 +336,8 @@ class InstrumentController(QObject):
             self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
             self._instruments['Генератор'].set_output(state='ON')
 
-            curr = MeasureResultMock.generate_value(param['Istat'][secondary])
-            curr_str = '0.' + f'{curr:.02f} mADC'.replace('.', ',')
+            curr = int(MeasureResultMock.generate_value(param['Istat'][secondary]) * 10)
+            curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
             self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
 
             if not mock_enabled:
@@ -363,8 +363,8 @@ class InstrumentController(QObject):
             self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
 
             if param['Idyn'][0] is not None:
-                curr = MeasureResultMock.generate_value(param['Istat'][secondary])
-                curr_str = '0.' + f'{curr:.02f} mADC'.replace('.', ',')
+                curr = int(MeasureResultMock.generate_value(param['Istat'][secondary]) * 10)
+                curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
                 self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
 
             for mul in range(1, 5):
