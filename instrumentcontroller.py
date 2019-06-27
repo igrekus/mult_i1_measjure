@@ -50,7 +50,7 @@ class InstrumentFactory:
 class GeneratorFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Генератор')
-        self.applicable = ['N5183A']
+        self.applicable = ['N5183A', 'N5181B']
     def from_address(self):
         if mock_enabled:
             return AgilentN5183A(self.addr, '1,N5183A mock,1', AgilentN5183AMock())
