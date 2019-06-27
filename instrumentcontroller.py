@@ -175,8 +175,9 @@ class MeasureResultMock(MeasureResult):
         self.headers = self.headersCache[device]
         self.data = [self.generateValue(data) for data in self._generators[f'{device} {secondary}']]
 
-    def generateValue(self, data):
-
+    @staticmethod
+    def generateValue(data):
+        print(data)
         if not data or '-' in data or chr(0x2212) in data or not all(data):
             return '-'
 
