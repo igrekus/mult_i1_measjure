@@ -286,7 +286,7 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_modulation(state='OFF')
         self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
         self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
-        self._instruments['Генератор'].set_output(state='ON')
+        self._instruments['Генератор'].set_output(state=1)
 
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=1, unit='MHz')
@@ -327,7 +327,8 @@ class InstrumentController(QObject):
         if param['Istat'][0] is not None:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
-            # self._instruments['Источник питания'].set_output(chan=1, state='ON') # -- missing?
+            self._instruments['Источник питания'].set_output(chan=1, state='ON')
+
             self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
             self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
             self._instruments['Генератор'].set_output(state='ON')
