@@ -192,10 +192,10 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Источник питания': SourceFactory('GPIB0::10::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB0::11::INSTR'),
-            'Генератор': GeneratorFactory('GPIB0::12::INSTR'),
-            'Анализатор': AnalyzerFactory('GPIB0::5::INSTR'),
+            'Источник питания': SourceFactory('GPIB0::4::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB0::2::INSTR'),
+            'Генератор': GeneratorFactory('GPIB0::20::INSTR'),
+            'Анализатор': AnalyzerFactory('GPIB0::18::INSTR'),
         }
 
         # TODO generate parameter list from .xlsx
