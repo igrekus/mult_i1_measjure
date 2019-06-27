@@ -177,7 +177,6 @@ class MeasureResultMock(MeasureResult):
 
     @staticmethod
     def generate_value(data):
-        print(data)
         if not data or '-' in data or chr(0x2212) in data or not all(data):
             return '-'
 
