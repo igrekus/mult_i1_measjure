@@ -258,7 +258,6 @@ class InstrumentController(QObject):
         for k, v in addrs.items():
             self.requiredInstruments[k].addr = v
         self.found = self._find()
-        # time.sleep(5)
 
     def _find(self):
         self._instruments = {
