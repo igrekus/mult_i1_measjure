@@ -291,6 +291,9 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=1, unit='MHz')
 
+        if not mock_enabled:
+            time.sleep(0.3)
+
         center_freq = param['F'][6] * param['mul']
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
@@ -333,6 +336,10 @@ class InstrumentController(QObject):
             self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
             self._instruments['Генератор'].set_output(state='ON')
             # TODO implement multimeter display current:         # 5.4.	Мультиметр – отобразить ток потребления Iстат
+
+            if not mock_enabled:
+                time.sleep(3)
+
             self._instruments['Генератор'].set_output(state='OFF')
             self._instruments['Источник питания'].set_output(chan=1, state='OFF')
         # ===
@@ -351,6 +358,10 @@ class InstrumentController(QObject):
         for freq in param['F']:
             temp = list()
             for mul in range(1, 5):
+
+                if not mock_enabled:
+                    time.sleep(0.25)
+
                 self._instruments['Анализатор'].set_measure_center_freq(value=mul * freq, unit='GHz')
                 self._instruments['Анализатор'].set_marker1_x_center(value=mul * freq, unit='GHz')
                 temp.append(self._instruments['Анализатор'].read_pow(marker=1))
@@ -364,6 +375,10 @@ class InstrumentController(QObject):
         center_freq = param['mul'] * param['F'][6]
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+
+        if not mock_enabled:
+            time.sleep(0.5)
+
         pow2 = self._instruments['Анализатор'].read_pow(marker=1)
 
         self._instruments['Генератор'].set_output(state='OFF')
