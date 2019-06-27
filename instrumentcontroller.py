@@ -148,18 +148,18 @@ class MeasureResultMock(MeasureResult):
         self.data.clear()
 
         # check task table presence
-        def getFileList(data_path):
+        def get_file_list(data_path):
             return [l for l in listdir(data_path) if isfile(join(data_path, l)) and '.xlsx' in l]
 
-        files = getFileList('.')
+        files = get_file_list('.')
         if len(files) != 1:
             print('working dir should have only one task table')
             return False
 
-        self._parseTaskTable(files[0])
+        self._parese_task_table(files[0])
         return True
 
-    def _parseTaskTable(self, filename):
+    def _parese_task_table(self, filename):
         print(f'using task table: {filename}')
         for dev in self.devices:
             raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
@@ -173,10 +173,10 @@ class MeasureResultMock(MeasureResult):
     def process_raw_data(self, device, secondary, raw_data):
         print('processing', device, secondary, raw_data)
         self.headers = self.headersCache[device]
-        self.data = [self.generateValue(data) for data in self._generators[f'{device} {secondary}']]
+        self.data = [self.generate_value(data) for data in self._generators[f'{device} {secondary}']]
 
     @staticmethod
-    def generateValue(data):
+    def generate_value(data):
         print(data)
         if not data or '-' in data or chr(0x2212) in data or not all(data):
             return '-'
