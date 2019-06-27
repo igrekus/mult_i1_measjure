@@ -210,7 +210,7 @@ class InstrumentController(QObject):
         self.deviceParams = {
             'Тип 1 (1324ПП11У)': {
                 'F': [0.6, 0.75, 0.89, 1.04, 1.18, 1.33, 1.47, 1.62, 1.76, 1.9, 2.20],
-                'test_mul': 2,
+                'mul': 2,
                 'P1': 13,
                 'P2': 21,
                 'Istat': [None, None, None],
@@ -218,7 +218,7 @@ class InstrumentController(QObject):
             },
             'Тип 5 (1324ПП15У)': {
                 'F': [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6],
-                'test_mul': 3,
+                'mul': 3,
                 'P1': 13,
                 'P2': 21,
                 'Istat': [None, None, None],
@@ -226,7 +226,7 @@ class InstrumentController(QObject):
             },
             'Тип 12 (1324ПП19У)': {
                 'F': [1.2, 1.35, 1.5, 1.65, 1.8, 1.95, 2.1, 2.25, 2.4, 2.55, 2.8],
-                'test_mul': 4,
+                'mul': 4,
                 'P1': 0,
                 'P2': 7,
                 'Istat': [(160, 170), (123, 125), (220, 230)],
@@ -234,7 +234,7 @@ class InstrumentController(QObject):
             },
             'Тип 1а (1324ПП23У)': {
                 'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
-                'test_mul': 2,
+                'mul': 2,
                 'P1': 13,
                 'P2': 21,
                 'Istat': [(220, 230), (170, 190), (240, 250)],
@@ -299,7 +299,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=1, unit='MHz')
 
-        center_freq = param['F'][6] * param['test_mul']
+        center_freq = param['F'][6] * param['mul']
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
         pow = self._instruments['Анализатор'].read_pow(marker=1)
