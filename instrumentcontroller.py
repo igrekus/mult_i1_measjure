@@ -357,6 +357,7 @@ class InstrumentController(QObject):
         pow_sweep_res = list()
         for freq in param['F']:
             temp = list()
+            self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
             for mul in range(1, 5):
 
                 if not mock_enabled:
