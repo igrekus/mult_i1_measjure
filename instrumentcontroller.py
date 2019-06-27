@@ -29,14 +29,6 @@ from instr.agilentn9030a import AgilentN9030A
 mock_enabled = True
 
 
-class Src:
-    addr = 'src addr'
-    model = 'Src'
-    status = f'{model} at {addr}'
-    def __str__(self):
-        return 'Src'
-
-
 class InstrumentFactory:
     def __init__(self, addr, label):
         self.applicable = None
