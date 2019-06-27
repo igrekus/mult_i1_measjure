@@ -107,10 +107,10 @@ class MultimeterFactory(InstrumentFactory):
 class SourceFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Исчточник питания')
-        self.applicable = ['SRC MODEL']
+        self.applicable = ['E3648A']
     def from_address(self):
         if mock_enabled:
-            return AgilentE3644A(self.addr, '1,SRC MODEL mock,1', AgilentE3644AMock())
+            return AgilentE3644A(self.addr, '1,E3648A mock,1', AgilentE3644AMock())
         try:
             rm = visa.ResourceManager()
             inst = rm.open_resource(self.addr)
