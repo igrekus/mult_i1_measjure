@@ -315,186 +315,73 @@ class InstrumentController(QObject):
     def measure(self, params):
         print(f'call measure with {params}')
         device, secondary = params
-        raw_data = self._ref_measure(device, secondary)
+        raw_data = self._measure(device, secondary)
         self.hasResult = bool(raw_data)
 
         if self.hasResult:
             self.result.process_raw_data(device, secondary, raw_data)
 
-    def _ref_measure(self, device, secondary):
-        print(f'launch measure with {self.deviceParams[device]} {self.secondaryParams[secondary]}')
-        # TODO implement actual measure algorithm
-        # time.sleep(3)
-        return ['raw data']
+    def _measure(self, device, secondary):
+        param = self.deviceParams[device]
+        secondary = self.secondaryParams[secondary]
+        print(f'launch measure with {param} {secondary}')
+
+        self._instruments['Генератор'].set_modulation(state='OFF')
+        self._instruments['Анализатор'].set_autocalibrate(state='OFF')
+        self._instruments['Анализатор'].set_span(value=1, unit='MHz')
+
+        # TODO extract static measure func
+        # ===
+        if param['Istat'][0] is not None:
+            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
+            self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
+            # self._instruments['Источник питания'].set_output(chan=1, state='ON') # -- missing?
+            self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+            self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
+            self._instruments['Генератор'].set_output(state='ON')
+            # TODO implement multimeter display current:         # 5.4.	Мультиметр – отобразить ток потребления Iстат
+            self._instruments['Генератор'].set_output(state='OFF')
+            self._instruments['Источник питания'].set_output(chan=1, state='OFF')
+        # ===
+
+        # TODO extract freq sweep func
+        # ===
+        if param['Istat'][0] is not None:
+            self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
+            self._instruments['Источник питания'].set_output(chan=1, state='ON')
+
+        self._instruments['Генератор'].set_freq(value=param['F'][0], unit='GHz')
+        self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
+        self._instruments['Генератор'].set_output(state='ON')
+
+        pow_sweep_res = list()
+        for freq in param['F']:
+            temp = list()
+            for mul in range(1, 5):
+                self._instruments['Анализатор'].set_measure_center_freq(value=mul * freq, unit='GHz')
+                self._instruments['Анализатор'].set_marker1_x_center(value=mul * freq, unit='GHz')
+                temp.append(self._instruments['Анализатор'].read_pow(marker=1))
+            pow_sweep_res.append(temp)
+        # ===
+
+        # TODO extract pow sweep func
+        # ===
+        self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+        self._instruments['Генератор'].set_pow(value=param['P2'], unit='dBm')
+        center_freq = param['mul'] * param['F'][6]
+        self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
+        self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+        pow2 = self._instruments['Анализатор'].read_pow(marker=1)
+
+        self._instruments['Генератор'].set_output(state='OFF')
+        self._instruments['Анализатор'].remove_marker(marker=1)
+        self._instruments['Анализатор'].set_autocalibrate(state='ON')
+        self._instruments['Источник питания'].set_output(chan=1, state='OFF')
+        # TODO implement multimeter display reset
+
+        return pow_sweep_res, pow2
 
     @property
     def status(self):
         return [i.status for i in self._instruments.values()]
 
-    def checkSample(self):
-        print('instrument manager: check sample')
-
-        if isfile('settings.ini'):
-            with open('settings.ini') as f:
-                line = f.readline()
-                self.pow_limit = float(line.split('=')[1].strip())
-
-        # TODO: report proper condition
-        return True
-
-    def checkTaskTable(self):
-
-        def getFileList(data_path):
-            return [l for l in listdir(data_path) if isfile(join(data_path, l)) and self.excel_extension in l]
-
-        # TODO: extract measurement manager class
-        print('instrument manager: check task table')
-
-        files = getFileList('.')
-        length = len(files)
-        if length > 1:
-            print('too many task tables, abort')
-            return False
-        elif length <= 0:
-            print('no task table found, abort')
-            return False
-
-        self._fileName = files[0]
-        print('using task table:', self._fileName)
-
-        wb = openpyxl.load_workbook(self._fileName)
-        ws = wb.active
-
-        cols = ws.max_column
-        rows = ws.max_row
-        letters = [chr(ch_code).upper() for ch_code in range(ord('a'), ord('z') + 1)]
-        start_col = 2
-
-        count = int((rows - 1) / 3)
-
-        # TODO: validate table
-        for row in range(count):
-            self._params[row + 1] = [[ws[char + str(row * 3 + 1 + num)].value for num in range(1, 4)] for char in letters[start_col:cols]]
-
-        headers = ['№'] + [ws[char + '1'].value for char in letters[start_col:cols]]
-
-        for model in self.measureModels.values():
-            model.initHeader(headers)
-
-        wb.close()
-        print('done read')
-        return True
-
-    # TODO implement proper measurement algorithm
-    def _measure(self, letter):
-        print(f'start measure letter={letter}')
-
-        self.measureTask(letter)
-
-        self.measureModels[letter].initModel(self._params[letter])
-
-        print('end measure')
-
-    def generator_freq_sweep(self, generator, letter):
-
-        def do_branch(letter, branch, step):
-
-            self.control_voltage = self.step_voltage[step]
-
-            if branch == 1:
-                chan1voltage = self.control_voltage
-                chan2voltage = 0.0
-            else:
-                chan1voltage = 0.0
-                chan2voltage = self.control_voltage
-
-            self._source.set_voltage(1, chan1voltage, 'V')
-            self._source.set_voltage(2, chan2voltage, 'V')
-            self._source.set_output(1, 'ON')
-            self._source.set_output(2, 'ON')
-
-            generator.set_output('ON')
-
-            pows = list()
-
-            for freq in self.measure_freq[letter].values():
-                generator.set_freq(freq, self.measure_freq_unit)
-                self._analyzer.set_measure_center_freq(freq, self.measure_freq_unit)
-                self._analyzer.set_marker1_x_center(freq, self.measure_freq_unit)
-
-                pows.append(self._analyzer.read_pow(1))
-                if not mock_enabled:
-                    time.sleep(0.3)
-
-            generator.set_output('OFF')
-            self._source.set_output(1, 'OFF')
-            self._source.set_output(2, 'OFF')
-
-            return pows
-
-        generator.set_pow(self.measure_pow[1]['p1'], self.measure_pow_unit)
-
-        pows = list()
-        for cycle in range(3):
-            pows = [do_branch(letter, branch, cycle) for branch in [1, 2]]
-        return pows
-
-    def measureTask(self, letter: int):
-
-        print(f'measurement task run, letter={letter}')
-
-        self._generator1.set_modulation('OFF')
-        self._generator2.set_modulation('OFF')
-
-        self._analyzer.set_autocalibrate('OFF')
-        self._analyzer.set_span(10, 'MHz')
-
-        self._source.set_current(1, self.measure_current, 'mA')
-        self._source.set_current(2, self.measure_current, 'mA')
-
-        self._analyzer.set_marker_mode(1, 'POS')
-
-        # gen 1 freq sweep
-        pows = self.generator_freq_sweep(self._generator1, letter)
-        print(pows)
-
-        # gen 2 freq sweep
-        pows = self.generator_freq_sweep(self._generator2, letter)
-        print(pows)
-
-        # gen 1 pow sweep
-        freq = self.measure_freq[letter]['f3']
-        freq_unit = self.measure_freq_unit
-        pow_unit = self.measure_pow_unit
-
-        self._generator1.set_freq(freq, freq_unit)
-
-        self._analyzer.set_autocalibrate('OFF')
-        self._analyzer.set_span(1, 'MHz')
-        self._analyzer.set_marker_mode(1, 'POS')
-        self._analyzer.set_measure_center_freq(freq, 'MHz')
-        self._analyzer.set_marker1_x_center(freq, 'MHz')
-
-        self._source.set_voltage(1, 3, 'V')
-        self._source.set_voltage(2, 0, 'V')
-        self._source.set_output(1, 'ON')
-        self._source.set_output(2, 'ON')
-
-        self._generator1.set_output('ON')
-
-        for pow in self.measure_pow[letter].values():
-            self._generator1.set_pow(pow, pow_unit)
-
-            if not mock_enabled:
-                time.sleep(0.3)
-
-            read_pow = self._analyzer.read_pow(1)
-            print(read_pow)
-
-        self._generator1.set_output('OFF')
-
-        self._source.set_output(1, 'OFF')
-        self._source.set_output(2, 'OFF')
-        self._source.set_system_local()
-
-        self._analyzer.set_autocalibrate('ON')
