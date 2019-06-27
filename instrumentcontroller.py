@@ -391,6 +391,7 @@ class InstrumentController(QObject):
 
         pow2 = self._instruments['Анализатор'].read_pow(marker=1)
 
+        self._instruments['Мультиметр'].send(f'*RST')
         self._instruments['Генератор'].set_output(state='OFF')
         self._instruments['Анализатор'].remove_marker(marker=1)
         self._instruments['Анализатор'].set_autocalibrate(state='ON')
