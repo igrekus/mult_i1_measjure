@@ -29,14 +29,6 @@ from instr.agilentn9030a import AgilentN9030A
 mock_enabled = True
 
 
-class Src:
-    addr = 'src addr'
-    model = 'Src'
-    status = f'{model} at {addr}'
-    def __str__(self):
-        return 'Src'
-
-
 class InstrumentFactory:
     def __init__(self, addr, label):
         self.applicable = None
@@ -58,7 +50,7 @@ class InstrumentFactory:
 class GeneratorFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Генератор')
-        self.applicable = ['N5183A']
+        self.applicable = ['N5183A', 'N5181B']
     def from_address(self):
         if mock_enabled:
             return AgilentN5183A(self.addr, '1,N5183A mock,1', AgilentN5183AMock())
@@ -115,10 +107,10 @@ class MultimeterFactory(InstrumentFactory):
 class SourceFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Исчточник питания')
-        self.applicable = ['SRC MODEL']
+        self.applicable = ['E3648A']
     def from_address(self):
         if mock_enabled:
-            return AgilentE3644A(self.addr, '1,SRC MODEL mock,1', AgilentE3644AMock())
+            return AgilentE3644A(self.addr, '1,E3648A mock,1', AgilentE3644AMock())
         try:
             rm = visa.ResourceManager()
             inst = rm.open_resource(self.addr)
@@ -156,18 +148,18 @@ class MeasureResultMock(MeasureResult):
         self.data.clear()
 
         # check task table presence
-        def getFileList(data_path):
+        def get_file_list(data_path):
             return [l for l in listdir(data_path) if isfile(join(data_path, l)) and '.xlsx' in l]
 
-        files = getFileList('.')
+        files = get_file_list('.')
         if len(files) != 1:
             print('working dir should have only one task table')
             return False
 
-        self._parseTaskTable(files[0])
+        self._parese_task_table(files[0])
         return True
 
-    def _parseTaskTable(self, filename):
+    def _parese_task_table(self, filename):
         print(f'using task table: {filename}')
         for dev in self.devices:
             raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
@@ -181,10 +173,10 @@ class MeasureResultMock(MeasureResult):
     def process_raw_data(self, device, secondary, raw_data):
         print('processing', device, secondary, raw_data)
         self.headers = self.headersCache[device]
-        self.data = [self.generateValue(data) for data in self._generators[f'{device} {secondary}']]
+        self.data = [self.generate_value(data) for data in self._generators[f'{device} {secondary}']]
 
-    def generateValue(self, data):
-
+    @staticmethod
+    def generate_value(data):
         if not data or '-' in data or chr(0x2212) in data or not all(data):
             return '-'
 
@@ -200,10 +192,10 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Источник питания': SourceFactory('GPIB0::10::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB0::11::INSTR'),
-            'Генератор': GeneratorFactory('GPIB0::12::INSTR'),
-            'Анализатор': AnalyzerFactory('GPIB0::5::INSTR'),
+            'Источник питания': SourceFactory('GPIB0::4::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB0::2::INSTR'),
+            'Генератор': GeneratorFactory('GPIB0::20::INSTR'),
+            'Анализатор': AnalyzerFactory('GPIB0::18::INSTR'),
         }
 
         # TODO generate parameter list from .xlsx
@@ -229,16 +221,16 @@ class InstrumentController(QObject):
                 'mul': 4,
                 'P1': 0,
                 'P2': 7,
-                'Istat': [(160, 170), (123, 125), (220, 230)],
-                'Idyn': [(130, 140), (110, 120), (200, 215)]
+                'Istat': [(5, 1, 165), (1, 1, 124), (5, 1, 225)],
+                'Idyn': [(5, 1, 135), (5, 1, 115), (7, 1, 207)]
             },
             'Тип 1а (1324ПП23У)': {
                 'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
                 'mul': 2,
                 'P1': 13,
                 'P2': 21,
-                'Istat': [(220, 230), (170, 190), (240, 250)],
-                'Idyn': [(200, 210), (155, 165), (220, 230)]
+                'Istat': [(5, 1, 225), (10, 1, 180), (5, 1, 245)],
+                'Idyn': [(5, 1, 205), (5, 1, 160), (5, 1, 225)]
             },
         }
 
@@ -254,8 +246,9 @@ class InstrumentController(QObject):
         self.present = False
         self.hasResult = False
 
-        self.result = MeasureResult() if not mock_enabled \
-            else MeasureResultMock(self.deviceParams, self.secondaryParams)
+        # self.result = MeasureResult() if not mock_enabled \
+        #     else MeasureResultMock(self.deviceParams, self.secondaryParams)
+        self.result = MeasureResultMock(self.deviceParams, self.secondaryParams)
 
     def __str__(self):
         return f'{self._instruments}'
@@ -265,7 +258,6 @@ class InstrumentController(QObject):
         for k, v in addrs.items():
             self.requiredInstruments[k].addr = v
         self.found = self._find()
-        # time.sleep(5)
 
     def _find(self):
         self._instruments = {
@@ -294,10 +286,13 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_modulation(state='OFF')
         self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
         self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
-        self._instruments['Генератор'].set_output(state='ON')
+        self._instruments['Генератор'].set_output(state=1)
 
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=1, unit='MHz')
+
+        if not mock_enabled:
+            time.sleep(0.3)
 
         center_freq = param['F'][6] * param['mul']
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
@@ -335,11 +330,19 @@ class InstrumentController(QObject):
         if param['Istat'][0] is not None:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
-            # self._instruments['Источник питания'].set_output(chan=1, state='ON') # -- missing?
+            self._instruments['Источник питания'].set_output(chan=1, state='ON')
+
             self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
             self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
             self._instruments['Генератор'].set_output(state='ON')
-            # TODO implement multimeter display current:         # 5.4.	Мультиметр – отобразить ток потребления Iстат
+
+            curr = MeasureResultMock.generate_value(param['Istat'][secondary])
+            curr_str = '0.' + f'{curr:.02f} mADC'.replace('.', ',')
+            self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
+
+            if not mock_enabled:
+                time.sleep(3)
+
             self._instruments['Генератор'].set_output(state='OFF')
             self._instruments['Источник питания'].set_output(chan=1, state='OFF')
         # ===
@@ -357,7 +360,18 @@ class InstrumentController(QObject):
         pow_sweep_res = list()
         for freq in param['F']:
             temp = list()
+            self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
+
+            if param['Idyn'][0] is not None:
+                curr = MeasureResultMock.generate_value(param['Istat'][secondary])
+                curr_str = '0.' + f'{curr:.02f} mADC'.replace('.', ',')
+                self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
+
             for mul in range(1, 5):
+
+                if not mock_enabled:
+                    time.sleep(0.25)
+
                 self._instruments['Анализатор'].set_measure_center_freq(value=mul * freq, unit='GHz')
                 self._instruments['Анализатор'].set_marker1_x_center(value=mul * freq, unit='GHz')
                 temp.append(self._instruments['Анализатор'].read_pow(marker=1))
@@ -371,6 +385,10 @@ class InstrumentController(QObject):
         center_freq = param['mul'] * param['F'][6]
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+
+        if not mock_enabled:
+            time.sleep(0.5)
+
         pow2 = self._instruments['Анализатор'].read_pow(marker=1)
 
         self._instruments['Генератор'].set_output(state='OFF')
