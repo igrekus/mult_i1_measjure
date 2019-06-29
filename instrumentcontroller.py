@@ -363,7 +363,7 @@ class InstrumentController(QObject):
             self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
 
             if param['Idyn'][0] is not None:
-                curr = int(MeasureResultMock.generate_value(param['Istat'][secondary]) * 10)
+                curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
                 curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
                 self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
 
