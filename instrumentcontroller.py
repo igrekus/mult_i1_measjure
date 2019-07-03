@@ -200,29 +200,30 @@ class InstrumentController(QObject):
 
         # TODO generate parameter list from .xlsx
         self.deviceParams = {
-            'Тип 1 (1324ПП11У)': {
-                'F': [0.6, 0.75, 0.89, 1.04, 1.18, 1.33, 1.47, 1.62, 1.76, 1.9, 2.20],
+            'Тип 2 (1324ПП12AT)': {
+                'F': [1.15, 1.35, 1.75, 1.92, 2.25, 2.54, 2.7, 3, 3.47, 3.86, 4.25],
+                'Freal': [1.15] * 11,
                 'mul': 2,
-                'P1': 13,
+                'P1': 15,
                 'P2': 21,
                 'Istat': [None, None, None],
                 'Idyn': [None, None, None]
             },
-            'Тип 5 (1324ПП15У)': {
-                'F': [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6],
-                'mul': 3,
-                'P1': 13,
+            'Тип 15 (1324ПП21У)': {
+                'F': [0.45, 0.86, 1.12, 1.3, 1.48, 1.65, 1.8, 2.0, 2.45, 2.86, 3.15],
+                'mul': 2,
+                'P1': 15,
                 'P2': 21,
                 'Istat': [None, None, None],
                 'Idyn': [None, None, None]
             },
-            'Тип 12 (1324ПП19У)': {
-                'F': [1.2, 1.35, 1.5, 1.65, 1.8, 1.95, 2.1, 2.25, 2.4, 2.55, 2.8],
-                'mul': 4,
-                'P1': 0,
-                'P2': 7,
-                'Istat': [(5, 0.1, 165), (1, 0.1, 124), (5, 0.1, 225)],
-                'Idyn': [(5, 0.1, 135), (5, 0.1, 115), (7, 0.1, 207)]
+            'Тип 4 (1324ПП14У)': {
+                'F': [5.55, 5.8, 6.5, 7.27, 7.6, 8.5, 9, 9.9, 10.8, 11.7, 12.65],
+                'mul': 2,
+                'P1': 21,
+                'P2': 15,
+                'Istat': [None, None, None],
+                'Idyn': [None, None, None]
             },
             'Тип 1а (1324ПП23У)': {
                 'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
@@ -240,6 +241,8 @@ class InstrumentController(QObject):
             1: 1,
             2: 2
         }
+
+        self.span = 1
 
         self._instruments = {}
         self.found = False
@@ -276,7 +279,7 @@ class InstrumentController(QObject):
         return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
 
     def _runCheck(self, param, secondary):
-        threshold = -5
+        threshold = -120
 
         if param['Istat'][0] is not None:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
@@ -289,10 +292,10 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_output(state=1)
 
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
-        self._instruments['Анализатор'].set_span(value=1, unit='MHz')
+        self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
 
         if not mock_enabled:
-            time.sleep(0.3)
+            time.sleep(0.2)
 
         center_freq = param['F'][6] * param['mul']
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
@@ -323,7 +326,8 @@ class InstrumentController(QObject):
 
         self._instruments['Генератор'].set_modulation(state='OFF')
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
-        self._instruments['Анализатор'].set_span(value=1, unit='MHz')
+        self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
+        self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
 
         # TODO extract static measure func
         # ===
@@ -333,7 +337,7 @@ class InstrumentController(QObject):
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
             self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
-            self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
+            self._instruments['Генератор'].set_pow(value=param['P2'], unit='dBm')
             self._instruments['Генератор'].set_output(state='ON')
 
             curr = int(MeasureResultMock.generate_value(param['Istat'][secondary]) * 10)
@@ -354,7 +358,6 @@ class InstrumentController(QObject):
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
         self._instruments['Генератор'].set_freq(value=param['F'][0], unit='GHz')
-        self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
         self._instruments['Генератор'].set_output(state='ON')
 
         pow_sweep_res = list()
@@ -362,20 +365,39 @@ class InstrumentController(QObject):
             temp = list()
             self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
 
-            if param['Idyn'][0] is not None:
-                curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
-                curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
-                self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
+            for index, pow in enumerate([param['P1'], param['P2']]):
+                self._instruments['Генератор'].set_pow(value=pow, unit='dBm')
 
-            for mul in range(1, 5):
+                if param['Idyn'][0] is not None:
+                    if index == 0:
+                        curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
+                    elif index == 1:
+                        curr = int(MeasureResultMock.generate_value(param['Istat'][secondary]) * 10)
 
-                if not mock_enabled:
-                    time.sleep(0.25)
+                    curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
+                    self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
 
-                self._instruments['Анализатор'].set_measure_center_freq(value=mul * freq, unit='GHz')
-                self._instruments['Анализатор'].set_marker1_x_center(value=mul * freq, unit='GHz')
-                temp.append(self._instruments['Анализатор'].read_pow(marker=1))
-            pow_sweep_res.append(temp)
+                for mul in range(1, 5):
+                    harm = mul * freq
+
+                    if harm < 25:
+                        self._instruments['Анализатор'].set_measure_center_freq(value=harm, unit='GHz')
+                        self._instruments['Анализатор'].set_marker1_x_center(value=harm, unit='GHz')
+                        if not mock_enabled:
+                            time.sleep(0.20)
+                    else:
+                        self._instruments['Анализатор'].set_measure_center_freq(value=freq * 2, unit='GHz')
+                        self._instruments['Анализатор'].set_marker1_x_center(value=freq * 2, unit='GHz')
+                        if not mock_enabled:
+                            time.sleep(0.20)
+                        # self._instruments['Анализатор'].set_measure_center_freq(value=harm, unit='GHz')
+                        # self._instruments['Анализатор'].set_marker1_x_center(value=harm, unit='GHz')
+                        # if not mock_enabled:
+                        #     time.sleep(0.20)
+                        # self._instruments['Анализатор'].send(f'SYST:PRES')
+
+                    temp.append(self._instruments['Анализатор'].read_pow(marker=1))
+                pow_sweep_res.append(temp)
         # ===
 
         # TODO extract pow sweep func
