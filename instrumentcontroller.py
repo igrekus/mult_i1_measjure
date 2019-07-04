@@ -1,4 +1,4 @@
-import random
+﻿import random
 import time
 import pandas
 import visa
@@ -381,14 +381,15 @@ class InstrumentController(QObject):
                 for mul in range(1, 5):
                     harm = mul * freq
 
-                    if harm < 25:
+                    if harm < 26:
                         self._instruments['Анализатор'].set_measure_center_freq(value=harm, unit='GHz')
                         self._instruments['Анализатор'].set_marker1_x_center(value=harm, unit='GHz')
                         if not mock_enabled:
                             time.sleep(0.20)
                     else:
-                        self._instruments['Анализатор'].set_measure_center_freq(value=freq * 2, unit='GHz')
-                        self._instruments['Анализатор'].set_marker1_x_center(value=freq * 2, unit='GHz')
+                        adjusted_harm = freq * 2 if freq * 2 < 26 else freq * 1
+                        self._instruments['Анализатор'].set_measure_center_freq(value=adjusted_harm, unit='GHz')
+                        self._instruments['Анализатор'].set_marker1_x_center(value=adjusted_harm, unit='GHz')
                         if not mock_enabled:
                             time.sleep(0.20)
                         # self._instruments['Анализатор'].set_measure_center_freq(value=harm, unit='GHz')
