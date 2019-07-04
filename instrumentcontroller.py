@@ -290,7 +290,7 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_output(state='OFF')
         self._instruments['Источник питания'].set_output(chan=1, state='OFF')
 
-        print('smaple response:', pow)
+        print('sфmaple response:', pow)
         return pow > threshold
 
     def measure(self, params):
