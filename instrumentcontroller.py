@@ -207,31 +207,13 @@ class InstrumentController(QObject):
                 'Istat': [None, None, None],
                 'Idyn': [None, None, None]
             },
-            'Тип 15 (1324ПП21У)': {
-                'F': [0.45, 0.86, 1.12, 1.3, 1.48, 1.65, 1.8, 2.0, 2.45, 2.86, 3.15],
-                'mul': 2,
-                'P1': 15,
-                'P2': 21,
-                'Istat': [None, None, None],
-                'Idyn': [None, None, None]
-            },
-            'Тип 4 (1324ПП14У)': {
-                'F': [5.55, 5.8, 6.5, 7.27, 7.6, 8.5, 9, 9.9, 10.8, 11.7, 12.65],
-                'mul': 2,
-                'P1': 21,
-                'P2': 15,
-                'Istat': [None, None, None],
-                'Idyn': [None, None, None]
-            },
-            'Тип 1а (1324ПП23У)': {
-                'F': [0.6, 0.73, 0.86, 0.99, 1.12, 1.25, 1.38, 1.51, 1.64, 1.77, 2.0],
-                'mul': 2,
-                'P1': 13,
-                'P2': 21,
-                'Istat': [(5, 0.1, 225), (10, 0.1, 180), (5, 0.1, 245)],
-                'Idyn': [(5, 0.1, 205), (5, 0.1, 160), (5, 0.1, 225)]
-            },
         }
+
+        if isfile('./params.ini'):
+            import ast
+            with open('./params.ini', 'rt', encoding='utf-8') as f:
+                raw = ''.join(f.readlines())
+                self.deviceParams = ast.literal_eval(raw)
 
         # TODO generate combo for secondary params
         self.secondaryParams = {
