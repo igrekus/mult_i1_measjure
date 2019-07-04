@@ -1,5 +1,5 @@
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QButtonGroup
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QButtonGroup, QLabel, QComboBox
 
 
 class DeviceSelectWidget(QWidget):
@@ -10,27 +10,29 @@ class DeviceSelectWidget(QWidget):
         super().__init__(parent=parent)
 
         self._layout = QVBoxLayout()
-        self._group = QButtonGroup()
+        self._label = QLabel('Прибор')
+        self._combo = QComboBox()
 
         for i, label in enumerate(params.keys()):
-            w = QRadioButton(label)
-            self._group.addButton(w, i)
-            self._layout.addWidget(w)
+            self._combo.addItem(label)
+
+        self._layout.addWidget(self._label)
+        self._layout.addWidget(self._combo)
 
         self.setLayout(self._layout)
-        self._group.button(0).setChecked(True)
-        self._group.buttonToggled[int, bool].connect(self.on_buttonToggled)
+
+        self._combo.setCurrentIndex(0)
+        self._combo.currentIndexChanged[str].connect(self.on_indexChanged)
 
         self._enabled = True
 
     @property
     def selected(self):
-        return self._group.checkedButton().text()
+        return self._combo.currentText()
 
-    @pyqtSlot(int, bool)
-    def on_buttonToggled(self, id, toggled):
-        if toggled:
-            self.selectedChanged.emit(self._group.button(id).text())
+    @pyqtSlot(str)
+    def on_indexChanged(self, text):
+        self.selectedChanged.emit(text)
 
     @property
     def enabled(self):
@@ -39,5 +41,4 @@ class DeviceSelectWidget(QWidget):
     @enabled.setter
     def enabled(self, value: bool):
         self._enabled = value
-        for b in self._group.buttons():
-            b.setEnabled(self._enabled)
+        self._combo.setEnabled(value)
