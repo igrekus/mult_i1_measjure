@@ -124,8 +124,8 @@ class MeasureWidgetWithSecondaryParameters(MeasureWidget):
         self._paramLabel = QLabel('Калибровка')
         self._paramCombo = QComboBox(parent=self)
         self._paramCombo.addItems(['Комнатная температура', '+125 ºС', '-60 ºС'])
-        self._ui.layParams.insertWidget(1, self._paramCombo)
-        self._ui.layParams.insertWidget(1, self._paramLabel)
+        self._devices._layout.insertWidget(2, self._paramCombo)
+        self._devices._layout.insertWidget(2, self._paramLabel)
         self._paramCombo.currentIndexChanged.connect(self.on_paramCombo_indexChanged)
 
         self._selectedSecondaryParam = 0
