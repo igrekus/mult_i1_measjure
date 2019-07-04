@@ -277,7 +277,10 @@ class InstrumentController(QObject):
         return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
 
     def _runCheck(self, param, secondary):
-        threshold = -120
+        threshold = -120.0
+        if isfile('./settings.ini'):
+            with open('./settings.ini', 'rt') as f:
+                threshold = float(f.readline().strip().split('=')[1])
 
         if param['Istat'][0] is not None:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
