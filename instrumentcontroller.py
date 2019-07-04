@@ -198,11 +198,9 @@ class InstrumentController(QObject):
             'Анализатор': AnalyzerFactory('GPIB0::18::INSTR'),
         }
 
-        # TODO generate parameter list from .xlsx
         self.deviceParams = {
             'Тип 2 (1324ПП12AT)': {
                 'F': [1.15, 1.35, 1.75, 1.92, 2.25, 2.54, 2.7, 3, 3.47, 3.86, 4.25],
-                'Freal': [1.15] * 11,
                 'mul': 2,
                 'P1': 15,
                 'P2': 21,
