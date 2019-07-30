@@ -20,13 +20,15 @@ from PyQt5.QtCore import QObject
 from agilent34410amock import Agilent34410AMock
 from agilente3644amock import AgilentE3644AMock
 from agilentn5183amock import AgilentN5183AMock
+from agilentn5230amock import AgilentN5230AMock
 from agilentn9030amock import AgilentN9030AMock
 from instr.agilent34410a import Agilent34410A
+from instr.agilentN5230A import AgilentN5230A
 from instr.agilente3644a import AgilentE3644A
 from instr.agilentn5183a import AgilentN5183A
 from instr.agilentn9030a import AgilentN9030A
 
-mock_enabled = True
+mock_enabled = False
 
 
 class InstrumentFactory:
@@ -66,13 +68,32 @@ class GeneratorFactory(InstrumentFactory):
             exit(1)
 
 
-class AnalyzerFactory(InstrumentFactory):
+class SpectrumAnalyzerFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Анализатор')
         self.applicable = ['N9030A']
     def from_address(self):
         if mock_enabled:
             return AgilentN9030A(self.addr, '1,N9030A mock,1', AgilentN9030AMock())
+        try:
+            rm = visa.ResourceManager()
+            inst = rm.open_resource(self.addr)
+            idn = inst.query('*IDN?')
+            name = idn.split(',')[1].strip()
+            if name in self.applicable:
+                return AgilentN9030A(self.addr, idn, inst)
+        except Exception as ex:
+            print('Analyzer find error:', ex)
+            exit(2)
+
+
+class NetworkAnalyzerFactory(InstrumentFactory):
+    def __init__(self, addr):
+        super().__init__(addr=addr, label='Анализатор')
+        self.applicable = ['N5230A']
+    def from_address(self):
+        if mock_enabled:
+            return AgilentN5230A(self.addr, '1,N5230A mock,1', AgilentN5230AMock())
         try:
             rm = visa.ResourceManager()
             inst = rm.open_resource(self.addr)
@@ -192,10 +213,10 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Источник питания': SourceFactory('GPIB0::4::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB0::2::INSTR'),
-            'Генератор': GeneratorFactory('GPIB0::20::INSTR'),
-            'Анализатор': AnalyzerFactory('GPIB0::18::INSTR'),
+            'Источник питания': SourceFactory('GPIB1::4::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB1::2::INSTR'),
+            'Генератор': GeneratorFactory('GPIB1::20::INSTR'),
+            'Анализатор': NetworkAnalyzerFactory('GPIB1::10::INSTR'),
         }
 
         self.deviceParams = {
@@ -207,7 +228,7 @@ class InstrumentController(QObject):
                 'Istat': [None, None, None],
                 'Idyn': [None, None, None]
             },
-        }
+        }\
 
         if isfile('./params.ini'):
             import ast
