@@ -1,4 +1,4 @@
-﻿import random
+import random
 import time
 import pandas
 import visa
@@ -225,10 +225,14 @@ class InstrumentController(QObject):
                 'mul': 2,
                 'P1': 15,
                 'P2': 21,
-                'Istat': [None, None, None],
-                'Idyn': [None, None, None]
+                'Istat': [[None, None, None],
+                          [None, None, None],
+                          [None, None, None]],
+                'Idyn': [[None, None, None],
+                         [None, None, None],
+                         [None, None, None]]
             },
-        }\
+        }
 
         if isfile('./params.ini'):
             import ast
