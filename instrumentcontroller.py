@@ -28,7 +28,7 @@ from instr.agilente3644a import AgilentE3644A
 from instr.agilentn5183a import AgilentN5183A
 from instr.agilentn9030a import AgilentN9030A
 
-mock_enabled = True
+mock_enabled = False
 
 
 class InstrumentFactory:
@@ -183,7 +183,11 @@ class MeasureResultMock(MeasureResult):
     def _parese_task_table(self, filename):
         print(f'using task table: {filename}')
         for dev in self.devices:
-            raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
+            try:
+                raw_data: pandas.DataFrame = pandas.read_excel(filename, sheet_name=dev)
+            except Exception as ex:
+                print('Error:', ex)
+                continue
             name, _, *headers = raw_data.columns.tolist()
             self.headersCache[name] = headers
             for g in raw_data.groupby(name):
@@ -220,17 +224,20 @@ class InstrumentController(QObject):
         }
 
         self.deviceParams = {
-            'Тип 2 (1324ПП12AT)': {
-                'F': [1.15, 1.35, 1.75, 1.92, 2.25, 2.54, 2.7, 3, 3.47, 3.86, 4.25],
-                'mul': 2,
-                'P1': 15,
-                'P2': 21,
-                'Istat': [[None, None, None],
-                          [None, None, None],
-                          [None, None, None]],
-                'Idyn': [[None, None, None],
-                         [None, None, None],
-                         [None, None, None]]
+            'Тип 3': {
+                'F': 6.0,
+                'Pmin': 15,
+                'Pmax': 21,
+                'Istat': [
+                    [None, None, None],
+                    [None, None, None],
+                    [None, None, None]
+                ],
+                'Idyn': [
+                    [None, None, None],
+                    [None, None, None],
+                    [None, None, None]
+                ]
             },
         }
 
@@ -331,8 +338,14 @@ class InstrumentController(QObject):
             self.result.process_raw_data(device, secondary, raw_data)
 
     def _pna_init(self):
+        user_preset_name = r'C:\Program Files\Agilent\Network Analyzer\Documents\UserPreset.sta'
+
         self._instruments['Анализатор'].send('SYST:PRES')
         self._instruments['Анализатор'].query('*OPC?')
+
+        self._instruments['Анализатор'].send(f'SYST:UPR:LOAD "{user_preset_name}"')
+        self._instruments['Анализатор'].send(f'SYST:UPR')
+
         self._instruments['Анализатор'].send('CALC:PAR:DEL:ALL')
         # self._instruments['Анализатор'].send('DISP:WIND2 ON')
 
@@ -352,7 +365,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].send(f'SENS1:SWE:MODE CONT')
         self._instruments['Анализатор'].send(f'SENS1:SWE:TRIG:MODE POIN')
 
-        self._instruments['Анализатор'].send(f'TRIG:ROUTE:INP MAIN')   # error
+        # self._instruments['Анализатор'].send(f'TRIG:ROUTE:INP MAIN')   # error TODO replace with preset load
         self._instruments['Анализатор'].send(f'TRIG:TYPE EDGE')
         self._instruments['Анализатор'].send(f'TRIG:SLOP POS')
         self._instruments['Анализатор'].send(f'CONT:SIGN:TRIG:ATBA ON')
@@ -401,10 +414,11 @@ class InstrumentController(QObject):
         secondary = self.secondaryParams[secondary]
         print(f'launch measure with {param} {secondary}')
 
-        self._pna_init()
         self._instruments['Генератор'].send('*CLS')
         self._instruments['Генератор'].set_modulation(state='OFF')
         self._instruments['Генератор'].send(f':POW:ATT:AUTO ON')
+
+        self._pna_init()
 
         # TODO extract static measure func
         # ===
@@ -429,14 +443,14 @@ class InstrumentController(QObject):
             self._instruments['Источник питания'].set_output(chan=1, state='OFF')
             # self._instruments['Мультиметр'].send(f'SYST:PRES')
 
+        self._syncRig()
+
         # TODO extract dynamic measure func
         # ===
         if param['Istat'][0][0] is not None:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
-
-        self._syncRig()
 
         # TODO extract pow sweep
         # ===
@@ -452,6 +466,9 @@ class InstrumentController(QObject):
         for mul in [1, 2, 3, 4]:
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
+            self._instruments['Генератор'].query('*OPC?')
+            if not mock_enabled:
+                time.sleep(0.3)
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
             if not mock_enabled:
                 time.sleep(0.3)
@@ -470,6 +487,9 @@ class InstrumentController(QObject):
         for mul in [1, 2, 3, 4]:
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
+            self._instruments['Генератор'].query('*OPC?')
+            if not mock_enabled:
+                time.sleep(0.3)
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
             if not mock_enabled:
                 time.sleep(0.3)
