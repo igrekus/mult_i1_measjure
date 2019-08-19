@@ -1,4 +1,4 @@
-import random
+﻿import random
 import time
 import pandas
 import visa
@@ -289,7 +289,7 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_output(state='OFF')
         self._instruments['Источник питания'].set_output(chan=1, state='OFF')
 
-        print('sфmaple response:', pow)
+        print('sample response:', pow)
         return pow > Ptest
 
     def measure(self, params):
