@@ -193,8 +193,8 @@ class InstrumentController(QObject):
 
         self.requiredInstruments = {
             'Источник питания': SourceFactory('GPIB0::4::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB0::2::INSTR'),
-            'Генератор': GeneratorFactory('GPIB0::20::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB0::22::INSTR'),
+            'Генератор': GeneratorFactory('GPIB0::5::INSTR'),
             'Анализатор': AnalyzerFactory('GPIB0::18::INSTR'),
         }
 
