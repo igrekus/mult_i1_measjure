@@ -1,4 +1,4 @@
-﻿import random
+import random
 import time
 import pandas
 import visa
@@ -29,6 +29,8 @@ from instr.agilentn5183a import AgilentN5183A
 from instr.agilentn9030a import AgilentN9030A
 
 mock_enabled = False
+giga = 1_000_000_000
+mega = 1_000_000
 
 
 class InstrumentFactory:
@@ -218,7 +220,7 @@ class InstrumentController(QObject):
 
         self.requiredInstruments = {
             'Источник питания': SourceFactory('GPIB1::4::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB1::2::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB1::22::INSTR'),
             'Генератор': GeneratorFactory('GPIB1::20::INSTR'),
             'Анализатор': NetworkAnalyzerFactory('GPIB1::10::INSTR'),
         }
@@ -292,41 +294,41 @@ class InstrumentController(QObject):
         return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
 
     def _runCheck(self, param, secondary):
-        return True
-        # 50 mA
-        threshold = -120.0
-        if isfile('./settings.ini'):
-            with open('./settings.ini', 'rt') as f:
-                threshold = float(f.readline().strip().split('=')[1])
+        Ptest = param['Ptest']
+        harm = param['harm']
+        Ftest = param['Ftest'] * harm * giga
 
-        if param['Istat'][0][0] is not None:
-            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
-            self._instruments['Источник питания'].set_voltage(chan=1, value=5, unit='V')
-            self._instruments['Источник питания'].set_output(chan=1, state='ON')
-
-        self._instruments['Генератор'].set_modulation(state='OFF')
-        self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
-        self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
-        self._instruments['Генератор'].set_output(state=1)
-
-        self._instruments['Анализатор'].set_autocalibrate(state='OFF')
-        self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
+        self._pna_init()
+        self._syncRig()
+        self._set_harmonic(2)
 
         if not mock_enabled:
-            time.sleep(0.2)
+            time.sleep(0.3)
 
-        center_freq = param['F'][6] * param['mul']
-        self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
-        self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
-        pow = self._instruments['Анализатор'].read_pow(marker=1)
+        self._instruments['Анализатор'].send('FORM:DATA ASCII')
+        self._instruments['Анализатор'].send(f'CALC1:PAR:SEL "MEAS_1"')
 
-        self._instruments['Анализатор'].remove_marker(marker=1)
-        self._instruments['Анализатор'].set_autocalibrate(state='ON')
+        self._instruments['Генератор'].set_pow(value=param['Pmin'], unit='dBm')
+        self._instruments['Генератор'].set_output(state='ON')
+        self._instruments['Генератор'].send(f':INIT')
+        self._instruments['Генератор'].query('*OPC?')
+
+        # self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
+
         self._instruments['Генератор'].set_output(state='OFF')
-        self._instruments['Источник питания'].set_output(chan=1, state='OFF')
 
-        print('sфmaple response:', pow)
-        return pow > threshold
+        if not mock_enabled:
+            time.sleep(0.3)
+
+        freqs = [float(x) for x in self._instruments['Анализатор'].query(f'SENS1:X?').split(',')]
+        amps = [float(x) for x in self._instruments['Анализатор'].query(f'CALC1:DATA? FDATA').split(',')]
+
+        diffs = [abs(f - Ftest) for f in freqs]
+        idx = diffs.index(min(diffs))
+
+        print(f'Ftest={Ftest}, Ptest={Ptest} => Fread={freqs[idx]}, Pread={amps[idx]}')
+
+        return amps[idx] > Ptest
 
     def measure(self, params):
         print(f'call measure with {params}')
@@ -350,7 +352,7 @@ class InstrumentController(QObject):
         # self._instruments['Анализатор'].send('DISP:WIND2 ON')
 
         self._instruments['Анализатор'].send('CALC1:PAR:DEF "MEAS_1",B,1')   # TODO use required meas param
-        self._instruments['Анализатор'].send('CALC1:FORM UPH')
+        self._instruments['Анализатор'].send('CALC1:FORM MLOG')
         self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:FEED "MEAS_1"')
         self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
 
@@ -358,7 +360,8 @@ class InstrumentController(QObject):
         # self._instruments['Анализатор'].send('SENS1:CORR:CSET:ACT "-20dBm_1.1-1.4G",1')
 
     def _syncRig(self):
-        sweep_points = 801
+        sweep_points = 301
+        smooth_points = 30
 
         self._instruments['Анализатор'].send(f'TRIG:SOUR EXT')
         self._instruments['Анализатор'].send(f'TRIG:SCOP CURR')
@@ -377,6 +380,10 @@ class InstrumentController(QObject):
         # self._instruments['Анализатор'].send(f'TRIG:CHAN1:AUX1:DUR?')
         self._instruments['Анализатор'].send(f'SENS1:SWE:POIN {sweep_points}')
         self._instruments['Анализатор'].send(f'SENS1:FOM ON')
+
+        # ass plot smothing
+        self._instruments['Анализатор'].send(f'CALC1:SMO ON')
+        self._instruments['Анализатор'].send(f'CALC1:SMO:POIN {smooth_points}')
 
         # self._instruments['Генератор'].set_pow(value=15, unit='dBm')
 
@@ -467,11 +474,11 @@ class InstrumentController(QObject):
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
             self._instruments['Генератор'].query('*OPC?')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
 
         # TODO extract freq sweep func
         # ===
@@ -488,11 +495,11 @@ class InstrumentController(QObject):
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
             self._instruments['Генератор'].query('*OPC?')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
 
         self._instruments['Анализатор'].send('CALC:PAR:DEL:ALL')
 
