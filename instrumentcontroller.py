@@ -472,11 +472,11 @@ class InstrumentController(QObject):
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
             self._instruments['Генератор'].query('*OPC?')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
 
         # TODO extract freq sweep func
         # ===
@@ -493,11 +493,11 @@ class InstrumentController(QObject):
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
             self._instruments['Генератор'].query('*OPC?')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
-            if not mock_enabled:
-                time.sleep(0.3)
+            #if not mock_enabled:
+            #    time.sleep(0.3)
 
         self._instruments['Анализатор'].send('CALC:PAR:DEL:ALL')
 
