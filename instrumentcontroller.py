@@ -313,6 +313,11 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].send(f':INIT')
         self._instruments['Генератор'].query('*OPC?')
 
+        is_active = param['Istat'][0][0] is not None
+        if is_active:
+            self._instruments['Анализатор'].send(f'CALC1:OFFS:MAGN 0 dB')
+        else:
+            self._instruments['Анализатор'].send(f'CALC1:OFFS:MAGN -{param["Pmin"]} dB')
         # self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
 
         self._instruments['Генератор'].set_output(state='OFF')
@@ -427,9 +432,10 @@ class InstrumentController(QObject):
 
         self._pna_init()
 
+        is_active = param['Istat'][0][0] is not None
         # TODO extract static measure func
         # ===
-        if param['Istat'][0][0] is not None:
+        if is_active:
             self._instruments['Источник питания'].set_current(chan=1, value=420, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
@@ -454,7 +460,7 @@ class InstrumentController(QObject):
 
         # TODO extract dynamic measure func
         # ===
-        if param['Istat'][0][0] is not None:
+        if is_active:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
@@ -462,7 +468,6 @@ class InstrumentController(QObject):
         # TODO extract pow sweep
         # ===
         self._instruments['Генератор'].set_pow(value=param['Pmin'], unit='dBm')
-        # self._instruments['Генератор'].set_freq(value=param['F'], unit='GHz')
         self._instruments['Генератор'].set_output(state='ON')
 
         if param['Idyn'][0][0] is not None:
@@ -474,10 +479,15 @@ class InstrumentController(QObject):
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
             self._instruments['Генератор'].query('*OPC?')
-            #if not mock_enabled:
+            # if not mock_enabled:
             #    time.sleep(0.3)
+            if is_active:
+                self._instruments['Анализатор'].send(f'CALC1:OFFS:MAGN 0 dB')
+            else:
+                self._instruments['Анализатор'].send(f'CALC1:OFFS:MAGN -{param["Pmin"]} dB')
+
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
-            #if not mock_enabled:
+            # if not mock_enabled:
             #    time.sleep(0.3)
 
         # TODO extract freq sweep func
@@ -495,10 +505,14 @@ class InstrumentController(QObject):
             self._set_harmonic(harmonic=mul)
             self._instruments['Генератор'].send(f':INIT')
             self._instruments['Генератор'].query('*OPC?')
-            #if not mock_enabled:
+            # if not mock_enabled:
             #    time.sleep(0.3)
+            if is_active:
+                self._instruments['Анализатор'].send(f'CALC1:OFFS:MAGN 0 dB')
+            else:
+                self._instruments['Анализатор'].send(f'CALC1:OFFS:MAGN -{param["Pmax"]} dB')
             self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
-            #if not mock_enabled:
+            # if not mock_enabled:
             #    time.sleep(0.3)
 
         self._instruments['Анализатор'].send('CALC:PAR:DEL:ALL')
