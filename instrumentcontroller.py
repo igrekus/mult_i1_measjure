@@ -179,8 +179,7 @@ class MeasureResultMock(MeasureResult):
             print('working dir should have only one task table')
             return False
 
-        self._parese_task_table(files[0])
-        return True
+        return self._parese_task_table(files[0])
 
     def _parese_task_table(self, filename):
         print(f'using task table: {filename}')
@@ -196,6 +195,7 @@ class MeasureResultMock(MeasureResult):
                 _, df = g
                 for h in headers:
                     self._generators[f'{name} {df[name].tolist()[0]}'].append(df[h].tolist())
+        return bool(len(self._generators))
 
     def process_raw_data(self, device, secondary, raw_data):
         print('processing', device, secondary, raw_data)
