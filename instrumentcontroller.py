@@ -1,4 +1,4 @@
-﻿import random
+import random
 import time
 import pandas
 import visa
@@ -350,7 +350,7 @@ class InstrumentController(QObject):
         # self._instruments['Анализатор'].send('DISP:WIND2 ON')
 
         self._instruments['Анализатор'].send('CALC1:PAR:DEF "MEAS_1",B,1')   # TODO use required meas param
-        self._instruments['Анализатор'].send('CALC1:FORM UPH')
+        self._instruments['Анализатор'].send('CALC1:FORM MLOG')
         self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:FEED "MEAS_1"')
         self._instruments['Анализатор'].send('DISP:WIND1:TRAC1:Y:SCAL:AUTO')
 
