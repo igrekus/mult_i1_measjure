@@ -318,9 +318,10 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
         self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
 
+        is_active = param['Istat'][0] is not None
         # TODO extract static measure func
         # ===
-        if param['Istat'][0] is not None:
+        if is_active:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
@@ -342,7 +343,7 @@ class InstrumentController(QObject):
 
         # TODO extract freq sweep func
         # ===
-        if param['Istat'][0] is not None:
+        if is_active:
             self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
@@ -354,10 +355,15 @@ class InstrumentController(QObject):
             temp = list()
             self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
 
-            for index, pow in enumerate([param['P1'], param['P2']]):
-                self._instruments['Генератор'].set_pow(value=pow, unit='dBm')
+            for index, pow_ in enumerate([param['P1'], param['P2']]):
+                self._instruments['Генератор'].set_pow(value=pow_, unit='dBm')
 
-                if param['Idyn'][0] is not None:
+                if not is_active:
+                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{pow_} dB')
+                else:
+                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
+
+                if is_active:
                     if index == 0:
                         curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
                     elif index == 1:
@@ -395,6 +401,10 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
         self._instruments['Генератор'].set_pow(value=param['P2'], unit='dBm')
         center_freq = param['mul'] * param['F'][6]
+        if not is_active:
+            self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P2"]} dB')
+        else:
+            self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
 
