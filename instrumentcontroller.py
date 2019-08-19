@@ -358,7 +358,8 @@ class InstrumentController(QObject):
         # self._instruments['Анализатор'].send('SENS1:CORR:CSET:ACT "-20dBm_1.1-1.4G",1')
 
     def _syncRig(self):
-        sweep_points = 801
+        sweep_points = 301
+        smooth_points = 30
 
         self._instruments['Анализатор'].send(f'TRIG:SOUR EXT')
         self._instruments['Анализатор'].send(f'TRIG:SCOP CURR')
@@ -377,6 +378,10 @@ class InstrumentController(QObject):
         # self._instruments['Анализатор'].send(f'TRIG:CHAN1:AUX1:DUR?')
         self._instruments['Анализатор'].send(f'SENS1:SWE:POIN {sweep_points}')
         self._instruments['Анализатор'].send(f'SENS1:FOM ON')
+
+        # ass plot smothing
+        self._instruments['Анализатор'].send(f'CALC1:SMO ON')
+        self._instruments['Анализатор'].send(f'CALC1:SMO:POIN {smooth_points}')
 
         # self._instruments['Генератор'].set_pow(value=15, unit='dBm')
 
