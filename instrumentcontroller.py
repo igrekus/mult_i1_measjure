@@ -300,7 +300,7 @@ class InstrumentController(QObject):
 
         self._pna_init()
         self._syncRig()
-        self._set_harmonic(2)
+        self._set_harmonic(harm)
 
         if not mock_enabled:
             time.sleep(0.3)
