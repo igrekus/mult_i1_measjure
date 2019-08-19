@@ -220,7 +220,7 @@ class InstrumentController(QObject):
 
         self.requiredInstruments = {
             'Источник питания': SourceFactory('GPIB1::4::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB1::2::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB1::22::INSTR'),
             'Генератор': GeneratorFactory('GPIB1::20::INSTR'),
             'Анализатор': NetworkAnalyzerFactory('GPIB1::10::INSTR'),
         }
