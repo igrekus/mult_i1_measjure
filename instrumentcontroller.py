@@ -261,15 +261,16 @@ class InstrumentController(QObject):
     def _runCheck(self, param, secondary):
         Ptest = param.get('Ptest', -50.0)
         harm = param.get('mul', 2)
-        Ftest = param.get('Ftest', 1.0) * harm
+        Ftest = param.get('Ftest', 1.0)
 
-        if param['Istat'][0] is not None:
+        is_active = param['Istat'][0] is not None
+        if is_active:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
         self._instruments['Генератор'].set_modulation(state='OFF')
-        self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+        self._instruments['Генератор'].set_freq(value=Ftest, unit='GHz')
         self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
         self._instruments['Генератор'].set_output(state=1)
 
@@ -279,9 +280,15 @@ class InstrumentController(QObject):
         if not mock_enabled:
             time.sleep(0.2)
 
-        center_freq = Ftest
+        center_freq = Ftest * harm
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+
+        if not is_active:
+            self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P1"]} dB')
+        else:
+            self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
+
         pow = self._instruments['Анализатор'].read_pow(marker=1)
 
         self._instruments['Анализатор'].remove_marker(marker=1)
