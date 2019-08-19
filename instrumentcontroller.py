@@ -1,4 +1,4 @@
-﻿import random
+import random
 import time
 import pandas
 import visa
@@ -259,10 +259,9 @@ class InstrumentController(QObject):
         return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
 
     def _runCheck(self, param, secondary):
-        threshold = -120.0
-        if isfile('./settings.ini'):
-            with open('./settings.ini', 'rt') as f:
-                threshold = float(f.readline().strip().split('=')[1])
+        Ptest = param.get('Ptest', -50.0)
+        harm = param.get('mul', 2)
+        Ftest = param.get('Ftest', 1.0) * harm
 
         if param['Istat'][0] is not None:
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
@@ -280,7 +279,7 @@ class InstrumentController(QObject):
         if not mock_enabled:
             time.sleep(0.2)
 
-        center_freq = param['F'][6] * param['mul']
+        center_freq = Ftest
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
         pow = self._instruments['Анализатор'].read_pow(marker=1)
@@ -291,7 +290,7 @@ class InstrumentController(QObject):
         self._instruments['Источник питания'].set_output(chan=1, state='OFF')
 
         print('sфmaple response:', pow)
-        return pow > threshold
+        return pow > Ptest
 
     def measure(self, params):
         print(f'call measure with {params}')
