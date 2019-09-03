@@ -259,7 +259,7 @@ class InstrumentController(QObject):
         return self.result.init() and self._runCheck(self.deviceParams[device], self.secondaryParams[secondary])
 
     def _runCheck(self, param, secondary):
-        Ptest = param.get('Ptest', -50.0)
+        Ptest = param.get('Ptest', -150.0)
         harm = param.get('mul', 2)
         Ftest = param.get('Ftest', 1.0)
 
