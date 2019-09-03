@@ -50,7 +50,7 @@ class InstrumentFactory:
 class GeneratorFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Генератор')
-        self.applicable = ['N5183A', 'N5181B', 'E4438C']
+        self.applicable = ['N5183A', 'N5181B', 'E4438C', 'E8257D']
     def from_address(self):
         if mock_enabled:
             return AgilentN5183A(self.addr, '1,N5183A mock,1', AgilentN5183AMock())
@@ -69,7 +69,7 @@ class GeneratorFactory(InstrumentFactory):
 class AnalyzerFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Анализатор')
-        self.applicable = ['N9030A']
+        self.applicable = ['N9030A', 'N9041B']
     def from_address(self):
         if mock_enabled:
             return AgilentN9030A(self.addr, '1,N9030A mock,1', AgilentN9030AMock())
@@ -107,7 +107,7 @@ class MultimeterFactory(InstrumentFactory):
 class SourceFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Исчточник питания')
-        self.applicable = ['E3648A']
+        self.applicable = ['E3648A', 'N6700C']
     def from_address(self):
         if mock_enabled:
             return AgilentE3644A(self.addr, '1,E3648A mock,1', AgilentE3644AMock())
