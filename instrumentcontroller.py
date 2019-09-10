@@ -272,7 +272,7 @@ class InstrumentController(QObject):
         self._instruments['Генератор'].set_modulation(state='OFF')
         self._instruments['Генератор'].set_freq(value=Ftest, unit='GHz')
         self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
-        self._instruments['Генератор'].set_output(state=1)
+        self._instruments['Генератор'].set_output(state='ON')
 
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
