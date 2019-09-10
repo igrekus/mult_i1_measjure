@@ -26,7 +26,7 @@ from instr.agilente3644a import AgilentE3644A
 from instr.agilentn5183a import AgilentN5183A
 from instr.agilentn9030a import AgilentN9030A
 
-mock_enabled = True
+mock_enabled = False
 
 
 class InstrumentFactory:
@@ -192,10 +192,10 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Источник питания': SourceFactory('GPIB0::4::INSTR'),
+            'Источник питания': SourceFactory('GPIB2::1::INSTR'),
             'Мультиметр': MultimeterFactory('GPIB0::22::INSTR'),
-            'Генератор': GeneratorFactory('GPIB0::5::INSTR'),
-            'Анализатор': AnalyzerFactory('GPIB0::18::INSTR'),
+            'Генератор': GeneratorFactory('GPIB2::19::INSTR'),
+            'Анализатор': AnalyzerFactory('GPIB2::18::INSTR'),
         }
 
         self.deviceParams = {
@@ -278,7 +278,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
 
         if not mock_enabled:
-            time.sleep(0.2)
+            time.sleep(0.4)
 
         center_freq = Ftest * harm
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
@@ -385,7 +385,7 @@ class InstrumentController(QObject):
                     self._instruments['Анализатор'].set_marker1_x_center(value=adjusted_harm, unit='GHz')
 
                     if not mock_enabled:
-                        time.sleep(0.35)
+                        time.sleep(0.4)
 
                     temp.append(self._instruments['Анализатор'].read_pow(marker=1))
                 pow_sweep_res.append(temp)
