@@ -90,7 +90,7 @@ class MultimeterFactory(InstrumentFactory):
         super().__init__(addr=addr, label='Мультиметр')
         self.applicable = ['34410A']
     def from_address(self):
-        if mock_enabled:
+        if not mock_enabled:
             return Agilent34410A(self.addr, '1,34410A mock,1', Agilent34410AMock())
         try:
             rm = visa.ResourceManager()
