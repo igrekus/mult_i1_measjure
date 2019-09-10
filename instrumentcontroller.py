@@ -376,21 +376,15 @@ class InstrumentController(QObject):
                     harm = mul * freq
 
                     if harm < 26:
-                        self._instruments['Анализатор'].set_measure_center_freq(value=harm, unit='GHz')
-                        self._instruments['Анализатор'].set_marker1_x_center(value=harm, unit='GHz')
-                        if not mock_enabled:
-                            time.sleep(0.20)
+                        adjusted_harm = harm
                     else:
                         adjusted_harm = freq * 2 if freq * 2 < 26 else freq * 1
-                        self._instruments['Анализатор'].set_measure_center_freq(value=adjusted_harm, unit='GHz')
-                        self._instruments['Анализатор'].set_marker1_x_center(value=adjusted_harm, unit='GHz')
-                        if not mock_enabled:
-                            time.sleep(0.20)
-                        # self._instruments['Анализатор'].set_measure_center_freq(value=harm, unit='GHz')
-                        # self._instruments['Анализатор'].set_marker1_x_center(value=harm, unit='GHz')
-                        # if not mock_enabled:
-                        #     time.sleep(0.20)
-                        # self._instruments['Анализатор'].send(f'SYST:PRES')
+
+                    self._instruments['Анализатор'].set_measure_center_freq(value=adjusted_harm, unit='GHz')
+                    self._instruments['Анализатор'].set_marker1_x_center(value=adjusted_harm, unit='GHz')
+
+                    if not mock_enabled:
+                        time.sleep(0.35)
 
                     temp.append(self._instruments['Анализатор'].read_pow(marker=1))
                 pow_sweep_res.append(temp)
