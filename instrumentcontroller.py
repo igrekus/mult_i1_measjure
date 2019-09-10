@@ -375,11 +375,12 @@ class InstrumentController(QObject):
 
                 for mul in range(1, 5):
                     harm = mul * freq
+                    adjusted_harm = harm
 
-                    if harm < 26:
-                        adjusted_harm = harm
-                    else:
-                        adjusted_harm = freq * 2 if freq * 2 < 26 else freq * 1
+                    # if harm < 26:
+                    #     adjusted_harm = harm
+                    # else:
+                    #     adjusted_harm = freq * 2 if freq * 2 < 26 else freq * 1
 
                     self._instruments['Анализатор'].set_measure_center_freq(value=adjusted_harm, unit='GHz')
                     self._instruments['Анализатор'].set_marker1_x_center(value=adjusted_harm, unit='GHz')
@@ -393,20 +394,20 @@ class InstrumentController(QObject):
 
         # TODO extract pow sweep func
         # ===
-        self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
-        self._instruments['Генератор'].set_pow(value=param['P2'], unit='dBm')
-        center_freq = param['mul'] * param['F'][6]
-        if not is_active:
-            self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P2"]} dB')
-        else:
-            self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
-        self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
-        self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
-
-        if not mock_enabled:
-            time.sleep(0.5)
-
-        pow2 = self._instruments['Анализатор'].read_pow(marker=1)
+        # self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+        # self._instruments['Генератор'].set_pow(value=param['P2'], unit='dBm')
+        # center_freq = param['mul'] * param['F'][6]
+        # if not is_active:
+        #     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P2"]} dB')
+        # else:
+        #     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
+        # self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
+        # self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+        #
+        # if not mock_enabled:
+        #     time.sleep(0.5)
+        #
+        # pow2 = self._instruments['Анализатор'].read_pow(marker=1)
 
         self._instruments['Мультиметр'].send(f'*RST')
         self._instruments['Генератор'].set_output(state='OFF')
