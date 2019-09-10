@@ -283,6 +283,7 @@ class InstrumentController(QObject):
         center_freq = Ftest * harm
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
         self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
+        self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
 
         if not is_active:
             self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P1"]} dB')
