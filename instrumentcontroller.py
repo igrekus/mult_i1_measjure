@@ -278,7 +278,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
 
         if not mock_enabled:
-            time.sleep(0.4)
+            time.sleep(0.3)
 
         center_freq = Ftest * harm
         self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
