@@ -290,7 +290,15 @@ class InstrumentController(QObject):
         else:
             self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
 
+        if not mock_enabled:
+            time.sleep(0.1)
+
+        self._instruments['Анализатор'].query(f'*OPC?')
         pow = self._instruments['Анализатор'].read_pow(marker=1)
+        pow = self._instruments['Анализатор'].read_pow(marker=1)
+
+        if not mock_enabled:
+            time.sleep(0.3)
 
         self._instruments['Анализатор'].remove_marker(marker=1)
         self._instruments['Анализатор'].set_autocalibrate(state='ON')
