@@ -222,7 +222,7 @@ class InstrumentController(QObject):
             2: 2
         }
 
-        self.span = 0.5
+        self.span = 1
 
         self._instruments = {}
         self.found = False
