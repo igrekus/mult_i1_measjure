@@ -454,7 +454,8 @@ class InstrumentController(QObject):
         self._instruments['Источник питания'].set_output(chan=1, state='OFF')
         # TODO implement multimeter display reset
 
-        return pow_sweep_res, pow2
+        # return pow_sweep_res, pow2
+        return pow_sweep_res, 0
 
     @property
     def status(self):
