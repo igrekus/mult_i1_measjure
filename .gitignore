@@ -174,3 +174,5 @@ ref/
 
 *.xlsx
 imgui\.ini
+
+instr/
