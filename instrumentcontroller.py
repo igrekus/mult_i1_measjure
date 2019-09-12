@@ -222,7 +222,7 @@ class InstrumentController(QObject):
             2: 2
         }
 
-        self.span = 1
+        self.span = 0.1
 
         self._instruments = {}
         self.found = False
@@ -260,9 +260,9 @@ class InstrumentController(QObject):
 
     def _runCheck(self, param, secondary):
         Ptest = param.get('Ptest', -150.0)
-        harm = param.get('mul', 2)
-        Ftest = param.get('Freal', [1.0] * 11)[5]
-        Fmul = param.get('Fmul', [3] * 11)[5]
+        mul = 2
+        freq = param['Freal'][5]
+        fmul = param['Fmul'][5]
 
         is_active = param['Istat'][0] is not None
         if is_active:
@@ -276,22 +276,27 @@ class InstrumentController(QObject):
         # -> SOUR:POW -12 dbm
         # -> outp on
         # -> FREQ:MULT 3.9
-        self._instruments['Генератор'].set_freq(value=Ftest, unit='GHz')
-        self._instruments['Генератор'].send(f':FREQ:MULT {Fmul}')
+        self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
+        self._instruments['Генератор'].send(f':FREQ:MULT {fmul}')
         self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
         self._instruments['Генератор'].set_output(state='ON')
 
         self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
+        self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
 
         if not mock_enabled:
             time.sleep(1)
 
-        center_freq = Ftest * harm
-        self._instruments['Анализатор'].set_measure_center_freq(value=center_freq, unit='GHz')
-        self._instruments['Анализатор'].set_marker1_x_center(value=center_freq, unit='GHz')
-        self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
+        measure_freq = mul * freq
+        demo_freq = measure_freq * fmul
+        offset = demo_freq - measure_freq
+
+        self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
+        self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
+        # self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
         if not is_active:
             self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P1"]} dB')
@@ -334,6 +339,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
         self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
+        self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
 
         is_active = param['Istat'][0] is not None
         # TODO extract static measure func
@@ -373,19 +379,19 @@ class InstrumentController(QObject):
         for i in range(11):
             freq = param['Freal'][i]
             fmul = param['Fmul'][i]
-            fdemo = freq * fmul
 
             temp = list()
+            self._instruments['Генератор'].send(f':FREQ:MULT 1')
             self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
             self._instruments['Генератор'].send(f':FREQ:MULT {fmul}')
 
             for index, pow_ in enumerate([param['P1'], param['P2']]):
                 self._instruments['Генератор'].set_pow(value=pow_, unit='dBm')
 
-                if not is_active:   # TODO make reference constant for
-                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{pow_} dB')
-                else:
-                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
+                # if not is_active:   # TODO make reference constant for
+                #     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{pow_} dB')
+                # else:
+                #     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
 
                 if is_active:
                     if index == 0:
@@ -396,22 +402,29 @@ class InstrumentController(QObject):
                     curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
                     self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
 
-                for mul in range(1, 5):
-                    harm = mul * freq
-                    adjusted_harm = harm
+                for mul in range(1, 4):   # -> 1, 2, 3
+                    measure_freq = mul * freq
+                    demo_freq = measure_freq * fmul
+                    offset = demo_freq - measure_freq
 
-                    # if harm < 26:
-                    #     adjusted_harm = harm
-                    # else:
-                    #     adjusted_harm = freq * 2 if freq * 2 < 26 else freq * 1
+                    pow_offs = 0
 
-                    offset = fdemo - adjusted_harm
-                    self._instruments['Анализатор'].set_measure_center_freq(value=adjusted_harm, unit='GHz')
-                    self._instruments['Анализатор'].set_marker1_x_center(value=adjusted_harm, unit='GHz')
+                    if mul == 1:
+                        pow_offs = param['Poffs1'][i]
+                    elif mul == 2:
+                        pow_offs = param['Poffs2'][i]
+                    elif mul == 3:
+                        pow_offs = param['Poffs3'][i]
+
+                    self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
+                    self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
                     self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
+                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
+                    # self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
+                    self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
                     if not mock_enabled:
-                        time.sleep(0.4)
+                        time.sleep(0.5)
 
                     temp.append(self._instruments['Анализатор'].read_pow(marker=1))
                 pow_sweep_res.append(temp)
