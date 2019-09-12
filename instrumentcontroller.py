@@ -90,7 +90,7 @@ class MultimeterFactory(InstrumentFactory):
         super().__init__(addr=addr, label='Мультиметр')
         self.applicable = ['34410A']
     def from_address(self):
-        if not mock_enabled:
+        if mock_enabled:
             return Agilent34410A(self.addr, '1,34410A mock,1', Agilent34410AMock())
         try:
             rm = visa.ResourceManager()
@@ -192,8 +192,8 @@ class InstrumentController(QObject):
         super().__init__(parent=parent)
 
         self.requiredInstruments = {
-            'Источник питания': SourceFactory('GPIB2::1::INSTR'),
-            'Мультиметр': MultimeterFactory('GPIB0::22::INSTR'),
+            'Источник питания': SourceFactory('GPIB2::4::INSTR'),
+            'Мультиметр': MultimeterFactory('GPIB2::22::INSTR'),
             'Генератор': GeneratorFactory('GPIB2::19::INSTR'),
             'Анализатор': AnalyzerFactory('GPIB2::18::INSTR'),
         }
