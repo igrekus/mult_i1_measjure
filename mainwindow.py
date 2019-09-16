@@ -47,8 +47,7 @@ class MainWindow(QMainWindow):
         self.refreshView()
 
         # TODO HACK to force device selection to trigger control table update
-        self._measureWidget._devices._combo.setCurrentIndex(1)
-        self._measureWidget._devices._combo.setCurrentIndex(0)
+        self._measureWidget._devices._combo.setCurrentIndex(10)
 
         self._updatePowCombo()
 
