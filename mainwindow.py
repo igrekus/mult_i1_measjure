@@ -44,12 +44,22 @@ class MainWindow(QMainWindow):
 
         self._ui.tableMeasure.setModel(self._measureModel)
         self._ui.tableControl.setModel(self._controlModel)
-
         self.refreshView()
 
         # TODO HACK to force device selection to trigger control table update
         self._measureWidget._devices._combo.setCurrentIndex(1)
         self._measureWidget._devices._combo.setCurrentIndex(0)
+
+        self._updatePowCombo()
+
+    def _updatePowCombo(self):
+        self._ui.comboPow.clear()
+        params = self._instrumentController.deviceParams[self._measureWidget._selectedDevice]
+        self._ui.comboPow.addItems([
+            f'P1= {params["P1"]}',
+            f'P2= {params["P2"]}'
+        ])
+
 
     # UI utility methods
     def refreshView(self):
@@ -83,7 +93,12 @@ class MainWindow(QMainWindow):
             return
         point_params = self._controlModel.getParamsForRow(index.row())
         self._ui.tableControl.setEnabled(False)
-        self._instrumentController.tuneToPoint(point_params, self._measureWidget._selectedSecondaryParam, col - 1)
+        self._instrumentController.tuneToPoint(
+            point_params,
+            self._measureWidget._selectedSecondaryParam,
+            harmNum=col - 1,
+            power=self._ui.comboPow.currentText()[:2]
+        )
         self._ui.tableControl.setEnabled(True)
 
     @pyqtSlot(QModelIndex)
