@@ -107,7 +107,7 @@ class MultimeterFactory(InstrumentFactory):
 class SourceFactory(InstrumentFactory):
     def __init__(self, addr):
         super().__init__(addr=addr, label='Исчточник питания')
-        self.applicable = ['E3648A', 'N6700C']
+        self.applicable = ['E3648A', 'N6700C', 'E3631A']
     def from_address(self):
         if mock_enabled:
             return AgilentE3644A(self.addr, '1,E3648A mock,1', AgilentE3644AMock())
