@@ -316,9 +316,9 @@ class InstrumentController(QObject):
             time.sleep(1)
 
         self._instruments['Анализатор'].send(f':CALC:MARK1:MODE OFF')
-        self._instruments['Анализатор'].set_autocalibrate(state='ON')
+        # self._instruments['Анализатор'].set_autocalibrate(state='ON')
         self._instruments['Генератор'].set_output(state='OFF')
-        self._instruments['Источник питания'].set_output(chan=1, state='OFF')
+        # self._instruments['Источник питания'].set_output(chan=1, state='OFF')
 
         print('sample response:', pow)
         return pow > Ptest
