@@ -26,7 +26,7 @@ from instr.agilente3644a import AgilentE3644A
 from instr.agilentn5183a import AgilentN5183A
 from instr.agilentn9030a import AgilentN9030A
 
-mock_enabled = False
+mock_enabled = True
 
 
 class InstrumentFactory:
@@ -459,6 +459,17 @@ class InstrumentController(QObject):
 
         # return pow_sweep_res, pow2
         return pow_sweep_res, 0
+
+    def tuneToPoint(self, params):
+        print(f'tunning to {params}')
+        params = {'F': 22.3, 'Freal': 6.4, 'Fmul': 3.4, 'Poffs1': 0, 'Poffs2': 0, 'Poffs3': 0, 'p': -12, 'Istat': [(5, 0.1, 225), (10, 0.1, 180), (5, 0.1, 245)], 'Idyn': [(5, 0.1, 205), (5, 0.1, 160), (5, 0.1, 225)]}
+
+        is_active = bool(params['Idyn'][0])
+
+        if is_active:
+            self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
+            self._instruments['Источник питания'].set_output(chan=1, state='ON')
+
 
     @property
     def status(self):

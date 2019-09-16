@@ -49,7 +49,9 @@ class ControlModel(QAbstractTableModel):
             'Poffs1': self._params['Poffs1'][row],
             'Poffs2': self._params['Poffs2'][row],
             'Poffs3': self._params['Poffs3'][row],
-            'p': self._params['P1']
+            'p': self._params['P1'],
+            'Istat': self._params['Istat'],
+            'Idyn': self._params['Idyn']
         }
 
     @pyqtSlot(str)
