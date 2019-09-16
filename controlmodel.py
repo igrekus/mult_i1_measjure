@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant, pyqtSlot
+from PyQt5.QtCore import Qt, QAbstractTableModel, QVariant, pyqtSlot, QModelIndex
 
 
 class ControlModel(QAbstractTableModel):
@@ -9,14 +9,14 @@ class ControlModel(QAbstractTableModel):
         self._params = dict()
 
         self._data = list()
-        self._headers = ['№', 'Частота, ГГц']
+        self._headers = ['№', 'Частота, ГГц', 'x1', 'x2', 'x3']
 
         # self._init()
 
     def _init(self, value):
         self._params = self._controller.deviceParams[value]
 
-        self._data = [[i + 1, f] for i, f in enumerate(self._params['F'])]
+        self._data = [[i + 1, f, 1, 2, 3] for i, f in enumerate(self._params['F'])]
 
     def headerData(self, section, orientation, role=None):
         if orientation == Qt.Horizontal:
@@ -53,6 +53,14 @@ class ControlModel(QAbstractTableModel):
             'Istat': self._params['Istat'],
             'Idyn': self._params['Idyn']
         }
+
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
+        col = index.column()
+        flags = super().flags(index)
+        if col == 0 or col == 1:
+            return flags ^ Qt.ItemIsSelectable
+        return flags
+
 
     @pyqtSlot(str)
     def on_deviceChanged(self, value):

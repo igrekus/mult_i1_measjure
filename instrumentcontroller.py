@@ -462,8 +462,8 @@ class InstrumentController(QObject):
         # return pow_sweep_res, pow2
         return pow_sweep_res, 0
 
-    def tuneToPoint(self, param, secondary):
-        print(f'tunning to {param}')
+    def tuneToPoint(self, param, secondary, harmNum):
+        print(f'tunning to harmonic {harmNum}, {param}')
 
         is_active = bool(param['Idyn'][0])
 
@@ -481,7 +481,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0')
         self._instruments['Генератор'].send(f':FREQ:MULT 1')
 
-        mul = 2   # TODO make harmonic multiplier selectable
+        mul = harmNum
 
         freq = param['Freal']
         fmul = param['Fmul']
