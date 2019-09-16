@@ -298,6 +298,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
         # self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
         self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
         if not is_active:
             self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{param["P1"]} dB')
