@@ -421,6 +421,7 @@ class InstrumentController(QObject):
                         pow_offs = param['Poffs3'][i]
 
                     self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
+                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0')
                     self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
                     self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
                     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
