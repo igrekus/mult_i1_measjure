@@ -314,7 +314,7 @@ class InstrumentController(QObject):
         if not mock_enabled:
             time.sleep(1)
 
-        self._instruments['Анализатор'].remove_marker(marker=1)
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MODE OFF')
         self._instruments['Анализатор'].set_autocalibrate(state='ON')
         self._instruments['Генератор'].set_output(state='OFF')
         self._instruments['Источник питания'].set_output(chan=1, state='OFF')
@@ -452,7 +452,7 @@ class InstrumentController(QObject):
 
         self._instruments['Мультиметр'].send(f'*RST')
         self._instruments['Генератор'].set_output(state='OFF')
-        self._instruments['Анализатор'].remove_marker(marker=1)
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MODE OFF')
         self._instruments['Анализатор'].set_autocalibrate(state='ON')
         self._instruments['Источник питания'].set_output(chan=1, state='OFF')
         # TODO implement multimeter display reset
