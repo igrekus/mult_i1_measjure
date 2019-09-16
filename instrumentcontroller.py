@@ -264,6 +264,10 @@ class InstrumentController(QObject):
         freq = param['Freal'][5]
         fmul = param['Fmul'][5]
 
+        self._instruments['Анализатор'].send(f'SYST:PRES')
+        if not mock_enabled:
+            time.sleep(1)
+
         is_active = param['Istat'][0] is not None
         if is_active:
             self._instruments['Источник питания'].send('*RST')
