@@ -530,6 +530,14 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
         self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
+    def rigTurnOff(self):
+        print('power off rig')
+        self._instruments['Мультиметр'].send(f'*RST')
+        self._instruments['Генератор'].set_output(state='OFF')
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MODE OFF')
+        self._instruments['Анализатор'].set_autocalibrate(state='ON')
+        self._instruments['Источник питания'].set_output(chan=1, state='OFF')
+
     @property
     def status(self):
         return [i.status for i in self._instruments.values()]

@@ -105,3 +105,6 @@ class MainWindow(QMainWindow):
     def on_tableControl_activated(self, index):
         self.on_tableControl_clicked(index)
 
+    @pyqtSlot()
+    def on_btnOff_clicked(self):
+        self._instrumentController.rigTurnOff()

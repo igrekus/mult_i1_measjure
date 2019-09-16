@@ -38,7 +38,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabAuto">
        <attribute name="title">
@@ -73,6 +73,13 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QPushButton" name="btnOff">
+            <property name="text">
+             <string>Отключить</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QLabel" name="label">
             <property name="text">
