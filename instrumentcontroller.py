@@ -275,6 +275,11 @@ class InstrumentController(QObject):
             self._instruments['Источник питания'].set_voltage(chan=1, value=5, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
+            curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
+            curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
+            self._instruments['Мультиметр'].send('*RST')
+            self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
+
         self._instruments['Генератор'].send('*RST')
         self._instruments['Генератор'].set_modulation(state='OFF')
         # -> SOUR:FREQ 4.8Ghz
