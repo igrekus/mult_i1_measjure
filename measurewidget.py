@@ -21,6 +21,7 @@ class MeasureTask(QRunnable):
 
 class MeasureWidget(QWidget):
 
+    selectedChanged = pyqtSignal(str)
     sampleFound = pyqtSignal()
     measureComplete = pyqtSignal()
 
@@ -90,6 +91,7 @@ class MeasureWidget(QWidget):
     @pyqtSlot(str)
     def on_selectedChanged(self, value):
         self._selectedDevice = value
+        self.selectedChanged.emit(value)
 
     def _modePreConnect(self):
         self._ui.btnCheck.setEnabled(False)

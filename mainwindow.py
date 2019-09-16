@@ -1,7 +1,8 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QDialog, QAction
-from PyQt5.QtCore import Qt, QStateMachine, QState, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt, QStateMachine, QState, pyqtSignal, pyqtSlot, QModelIndex
 
+from controlmodel import ControlModel
 from instrumentcontroller import InstrumentController
 from connectionwidget import ConnectionWidget
 from measuremodel import MeasureModel
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow):
         self._connectionWidget = ConnectionWidget(parent=self, controller=self._instrumentController)
         self._measureWidget = MeasureWidgetWithSecondaryParameters(parent=self, controller=self._instrumentController)
         self._measureModel = MeasureModel(parent=self, controller=self._instrumentController)
+        self._controlModel = ControlModel(parent=self, controller=self._instrumentController)
 
         # init UI
         self._ui.layInstrs.insertWidget(0, self._connectionWidget)
@@ -36,12 +38,18 @@ class MainWindow(QMainWindow):
     def _init(self):
         self._connectionWidget.connected.connect(self.on_instrumens_connected)
         self._connectionWidget.connected.connect(self._measureWidget.on_instrumentsConnected)
+        self._measureWidget.selectedChanged.connect(self._controlModel.on_deviceChanged)
 
         self._measureWidget.measureComplete.connect(self._measureModel.update)
 
         self._ui.tableMeasure.setModel(self._measureModel)
+        self._ui.tableControl.setModel(self._controlModel)
 
         self.refreshView()
+
+        # TODO HACK to force device selection to trigger control table update
+        self._measureWidget._devices._combo.setCurrentIndex(1)
+        self._measureWidget._devices._combo.setCurrentIndex(0)
 
     # UI utility methods
     def refreshView(self):
@@ -57,6 +65,8 @@ class MainWindow(QMainWindow):
     def resizeTable(self):
         self._ui.tableMeasure.resizeRowsToContents()
         self._ui.tableMeasure.resizeColumnsToContents()
+        self._ui.tableControl.resizeRowsToContents()
+        self._ui.tableControl.resizeColumnsToContents()
 
     # event handlers
     def resizeEvent(self, event):
@@ -65,3 +75,8 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def on_instrumens_connected(self):
         print(f'connected {self._instrumentController}')
+
+    @pyqtSlot(QModelIndex)
+    def on_tableControl_clicked(self, index):
+        print(self._controlModel.getParamsForRow(index.row()))
+
