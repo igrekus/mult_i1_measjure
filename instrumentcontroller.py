@@ -288,7 +288,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
 
         if not mock_enabled:
-            time.sleep(1)
+            time.sleep(0.5)
 
         measure_freq = mul * freq
         demo_freq = measure_freq * fmul
@@ -306,14 +306,14 @@ class InstrumentController(QObject):
             self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
 
         if not mock_enabled:
-            time.sleep(1)
+            time.sleep(0.5)
 
         self._instruments['Анализатор'].query(f'*OPC?')
         pow = self._instruments['Анализатор'].read_pow(marker=1)
         pow = self._instruments['Анализатор'].read_pow(marker=1)
 
         if not mock_enabled:
-            time.sleep(1)
+            time.sleep(0.5)
 
         self._instruments['Анализатор'].send(f':CALC:MARK1:MODE OFF')
         # self._instruments['Анализатор'].set_autocalibrate(state='ON')
