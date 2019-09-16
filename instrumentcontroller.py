@@ -462,16 +462,54 @@ class InstrumentController(QObject):
         # return pow_sweep_res, pow2
         return pow_sweep_res, 0
 
-    def tuneToPoint(self, params):
-        print(f'tunning to {params}')
-        params = {'F': 22.3, 'Freal': 6.4, 'Fmul': 3.4, 'Poffs1': 0, 'Poffs2': 0, 'Poffs3': 0, 'p': -12, 'Istat': [(5, 0.1, 225), (10, 0.1, 180), (5, 0.1, 245)], 'Idyn': [(5, 0.1, 205), (5, 0.1, 160), (5, 0.1, 225)]}
+    def tuneToPoint(self, param, secondary):
+        print(f'tunning to {param}')
 
-        is_active = bool(params['Idyn'][0])
+        is_active = bool(param['Idyn'][0])
 
         if is_active:
             self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
+            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
+            curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
+            curr_str = ' 00.' + f'{curr}  ADC'.replace('.', ',')
+            self._instruments['Мультиметр'].send(f'DISPlay:WIND1:TEXT "{curr_str}"')
+
+        self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
+        self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0')
+        self._instruments['Генератор'].send(f':FREQ:MULT 1')
+
+        mul = 2   # TODO make harmonic multiplier selectable
+
+        freq = param['Freal']
+        fmul = param['Fmul']
+        measure_freq = mul * freq
+        demo_freq = measure_freq * fmul
+        offset = demo_freq - measure_freq
+
+        pow_offs = 0
+        if mul == 1:
+            pow_offs = param['Poffs1']
+        elif mul == 2:
+            pow_offs = param['Poffs2']
+        elif mul == 3:
+            pow_offs = param['Poffs3']
+
+        self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
+        self._instruments['Генератор'].send(f':FREQ:MULT {fmul}')
+        self._instruments['Генератор'].set_output(state='ON')
+
+        if not mock_enabled:
+            time.sleep(0.5)
+
+        self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
+        self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
+        # self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
+        self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
     @property
     def status(self):
