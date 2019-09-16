@@ -288,7 +288,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
 
         if not mock_enabled:
-            time.sleep(0.5)
+            time.sleep(0.5)   # задержка перед установкой оффсетов на анализаторе
 
         measure_freq = mul * freq
         demo_freq = measure_freq * fmul
@@ -296,7 +296,11 @@ class InstrumentController(QObject):
 
         self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
         self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
-        # self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
+
+        if not mock_enabled:
+            time.sleep(0.5)   # задержка после установки оффсетов перед установкой маркера
+
+        self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
         self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
         self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
@@ -306,14 +310,14 @@ class InstrumentController(QObject):
             self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0 dB')
 
         if not mock_enabled:
-            time.sleep(0.5)
+            time.sleep(0.5)   # задержка после установки оффсетов перед считыванием порогового уровня образца
 
         self._instruments['Анализатор'].query(f'*OPC?')
         pow = self._instruments['Анализатор'].read_pow(marker=1)
         pow = self._instruments['Анализатор'].read_pow(marker=1)
 
         if not mock_enabled:
-            time.sleep(0.5)
+            time.sleep(1)   # задержка после считывания уровня перед выключением инструментов
 
         self._instruments['Анализатор'].send(f':CALC:MARK1:MODE OFF')
         # self._instruments['Анализатор'].set_autocalibrate(state='ON')
@@ -392,6 +396,9 @@ class InstrumentController(QObject):
             for index, pow_ in enumerate([param['P1'], param['P2']]):
                 self._instruments['Генератор'].set_pow(value=pow_, unit='dBm')
 
+                if not mock_enabled:
+                    time.sleep(0.2)
+
                 # if not is_active:   # TODO make reference constant for
                 #     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS -{pow_} dB')
                 # else:
@@ -425,11 +432,16 @@ class InstrumentController(QObject):
                     self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
                     self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
                     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
-                    # self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
+
+                    if not mock_enabled:
+                        time.sleep(0.7)
+
+                    self._instruments['Анализатор'].set_marker1_x_center(value=demo_freq, unit='GHz')
+                    self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
                     self._instruments['Анализатор'].send(f':CALC:MARK1:MAX')
 
                     if not mock_enabled:
-                        time.sleep(0.5)
+                        time.sleep(0.1)
 
                     temp.append(self._instruments['Анализатор'].read_pow(marker=1))
                 pow_sweep_res.append(temp)
