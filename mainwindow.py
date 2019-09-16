@@ -79,10 +79,10 @@ class MainWindow(QMainWindow):
     @pyqtSlot(QModelIndex)
     def on_tableControl_clicked(self, index):
         point_params = self._controlModel.getParamsForRow(index.row())
-        self._instrumentController.tuneToPoint(point_params)
+        self._instrumentController.tuneToPoint(point_params, self._measureWidget._selectedSecondaryParam)
 
     @pyqtSlot(QModelIndex)
     def on_tableControl_activated(self, index):
         point_params = self._controlModel.getParamsForRow(index.row())
-        self._instrumentController.tuneToPoint(point_params)
+        self._instrumentController.tuneToPoint(point_params, self._measureWidget._selectedSecondaryParam)
 
