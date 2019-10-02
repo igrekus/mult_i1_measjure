@@ -506,8 +506,8 @@ class InstrumentController(QObject):
 
         mul = harmNum
 
-        freq = param['Freal'][secondary]
-        fmul = param['Fmul'][secondary]
+        freq = param['Freal']
+        fmul = param['Fmul']
         measure_freq = mul * freq
         demo_freq = measure_freq * fmul
         offset = demo_freq - measure_freq
@@ -515,11 +515,11 @@ class InstrumentController(QObject):
 
         pow_offs = 0
         if mul == 1:
-            pow_offs = param['Poffs1'][secondary]
+            pow_offs = param['Poffs1']
         elif mul == 2:
-            pow_offs = param['Poffs2'][secondary]
+            pow_offs = param['Poffs2']
         elif mul == 3:
-            pow_offs = param['Poffs3'][secondary]
+            pow_offs = param['Poffs3']
 
         self._instruments['Генератор'].send(f':FREQ:MULT 1')
         self._instruments['Генератор'].set_freq(value=freq, unit='GHz')

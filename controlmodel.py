@@ -47,15 +47,15 @@ class ControlModel(QAbstractTableModel):
             return QVariant(self._data[index.row()][index.column()])
         return QVariant()
 
-    def getParamsForRow(self, row):
+    def getParamsForRow(self, row, second):
         print(f'getting params for row {row}')
         return {
-            'F': self._params['F'][row],
-            'Freal': self._params['Freal'][row],
-            'Fmul': self._params['Fmul'][row],
-            'Poffs1': self._params['Poffs1'][row],
-            'Poffs2': self._params['Poffs2'][row],
-            'Poffs3': self._params['Poffs3'][row],
+            'F': self._params['F'][second][row],
+            'Freal': self._params['Freal'][second][row],
+            'Fmul': self._params['Fmul'][second][row],
+            'Poffs1': self._params['Poffs1'][second][row],
+            'Poffs2': self._params['Poffs2'][second][row],
+            'Poffs3': self._params['Poffs3'][second][row],
             'P1': self._params['P1'],
             'P2': self._params['P2'],
             'Istat': self._params['Istat'],

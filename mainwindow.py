@@ -92,7 +92,8 @@ class MainWindow(QMainWindow):
         col = index.column()
         if col in (0, 1):
             return
-        point_params = self._controlModel.getParamsForRow(index.row())
+        secondary = self._measureWidget._selectedSecondaryParam
+        point_params = self._controlModel.getParamsForRow(index.row(), secondary)
         self._ui.tableControl.setEnabled(False)
         self._instrumentController.tuneToPoint(
             point_params,
