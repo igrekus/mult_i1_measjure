@@ -286,13 +286,15 @@ class InstrumentController(QObject):
         # -> SOUR:POW -12 dbm
         # -> outp on
         # -> FREQ:MULT 3.9
+        self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
+
         self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
         self._instruments['Генератор'].send(f':FREQ:MULT {fmul}')
         self._instruments['Генератор'].set_pow(value=param['P1'], unit='dBm')
         self._instruments['Генератор'].set_output(state='ON')
 
-        self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
-        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
         self._instruments['Анализатор'].set_autocalibrate(state='OFF')
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
         self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
@@ -306,7 +308,6 @@ class InstrumentController(QObject):
 
         self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
         self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
-        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
 
         if not mock_enabled:
             time.sleep(0.5)   # задержка после установки оффсетов перед установкой маркера
@@ -357,7 +358,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_span(value=self.span, unit='MHz')
         self._instruments['Анализатор'].set_marker_mode(marker=1, mode='POS')
         self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
-        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
 
         is_active = param['Istat'][0] is not None
         # TODO extract static measure func
@@ -445,7 +446,7 @@ class InstrumentController(QObject):
                     self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
                     self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
                     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
-                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
+                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
 
                     if not mock_enabled:
                         time.sleep(0.7)
@@ -535,7 +536,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
         self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
         self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
-        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
 
         if not mock_enabled:
             time.sleep(0.6)
