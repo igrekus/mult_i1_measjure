@@ -223,6 +223,7 @@ class InstrumentController(QObject):
         }
 
         self.span = 0.1
+        self.refLevel = 0
 
         self._instruments = {}
         self.found = False
@@ -288,7 +289,7 @@ class InstrumentController(QObject):
         # -> FREQ:MULT 3.9
         self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
         self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
-        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 15dBm')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV {self.refLevel}dBm')
 
         self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
         self._instruments['Генератор'].send(f':FREQ:MULT {fmul}')
@@ -446,7 +447,7 @@ class InstrumentController(QObject):
                     self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
                     self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
                     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
-                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
+                    self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV {self.refLevel}dBm')
 
                     if not mock_enabled:
                         time.sleep(0.7)
@@ -536,7 +537,7 @@ class InstrumentController(QObject):
         self._instruments['Анализатор'].set_measure_center_freq(value=measure_freq, unit='GHz')
         self._instruments['Анализатор'].send(f'FREQ:OFFS {offset}GHz')
         self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS {pow_offs}dB')
-        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV 0dBm')
+        self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV {self.refLevel}dBm')
 
         if not mock_enabled:
             time.sleep(0.6)

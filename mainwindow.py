@@ -46,6 +46,8 @@ class MainWindow(QMainWindow):
 
         self._ui.tableMeasure.setModel(self._measureModel)
         self._ui.tableControl.setModel(self._controlModel)
+
+        self._ui.spinRefLevel.setValue(self._instrumentController.refLevel)
         self.refreshView()
 
         # TODO HACK to force device selection to trigger control table update
@@ -110,3 +112,7 @@ class MainWindow(QMainWindow):
     @pyqtSlot()
     def on_btnOff_clicked(self):
         self._instrumentController.rigTurnOff()
+
+    @pyqtSlot(int)
+    def on_spinRefLevel_valueChanged(self, value):
+        self._instrumentController.refLevel = value

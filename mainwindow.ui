@@ -38,7 +38,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabAuto">
        <attribute name="title">
@@ -83,12 +83,29 @@
           <item>
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Мощность</string>
+             <string>Мощность=</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QComboBox" name="comboPow"/>
+          </item>
+          <item>
+           <widget class="QLabel" name="lblRefLevel">
+            <property name="text">
+             <string>Макс ур.=</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinRefLevel">
+            <property name="minimum">
+             <number>-10</number>
+            </property>
+            <property name="maximum">
+             <number>15</number>
+            </property>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer">
