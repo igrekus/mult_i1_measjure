@@ -261,8 +261,8 @@ class InstrumentController(QObject):
     def _runCheck(self, param, secondary):
         Ptest = param.get('Ptest', -150.0)
         mul = 2
-        freq = param['Freal'][5]
-        fmul = param['Fmul'][5]
+        freq = param['Freal'][secondary][5]
+        fmul = param['Fmul'][secondary][5]
 
         self._instruments['Анализатор'].send(f'SYST:PRES')
         if not mock_enabled:
@@ -363,12 +363,13 @@ class InstrumentController(QObject):
         # TODO extract static measure func
         # ===
         if is_active:
+            center_freq = param['F'][secondary][6]
             self._instruments['Источник питания'].send('*RST')
             self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
-            self._instruments['Генератор'].set_freq(value=param['F'][6], unit='GHz')
+            self._instruments['Генератор'].set_freq(value=center_freq, unit='GHz')
             self._instruments['Генератор'].set_pow(value=param['P2'], unit='dBm')
             self._instruments['Генератор'].set_output(state='ON')
 
@@ -397,8 +398,8 @@ class InstrumentController(QObject):
 
         pow_sweep_res = list()
         for i in range(11):
-            freq = param['Freal'][i]
-            fmul = param['Fmul'][i]
+            freq = param['Freal'][secondary][i]
+            fmul = param['Fmul'][secondary][i]
 
             temp = list()
             self._instruments['Генератор'].send(f':FREQ:MULT 1')
@@ -433,11 +434,11 @@ class InstrumentController(QObject):
                     pow_offs = 0
 
                     if mul == 1:
-                        pow_offs = param['Poffs1'][i]
+                        pow_offs = param['Poffs1'][secondary][i]
                     elif mul == 2:
-                        pow_offs = param['Poffs2'][i]
+                        pow_offs = param['Poffs2'][secondary][i]
                     elif mul == 3:
-                        pow_offs = param['Poffs3'][i]
+                        pow_offs = param['Poffs3'][secondary][i]
 
                     self._instruments['Анализатор'].send(f'FREQ:OFFS 0')
                     self._instruments['Анализатор'].send(f'DISP:WIND1:TRAC:Y:RLEV:OFFS 0')
@@ -505,8 +506,8 @@ class InstrumentController(QObject):
 
         mul = harmNum
 
-        freq = param['Freal']
-        fmul = param['Fmul']
+        freq = param['Freal'][secondary]
+        fmul = param['Fmul'][secondary]
         measure_freq = mul * freq
         demo_freq = measure_freq * fmul
         offset = demo_freq - measure_freq
@@ -514,11 +515,11 @@ class InstrumentController(QObject):
 
         pow_offs = 0
         if mul == 1:
-            pow_offs = param['Poffs1']
+            pow_offs = param['Poffs1'][secondary]
         elif mul == 2:
-            pow_offs = param['Poffs2']
+            pow_offs = param['Poffs2'][secondary]
         elif mul == 3:
-            pow_offs = param['Poffs3']
+            pow_offs = param['Poffs3'][secondary]
 
         self._instruments['Генератор'].send(f':FREQ:MULT 1')
         self._instruments['Генератор'].set_freq(value=freq, unit='GHz')
