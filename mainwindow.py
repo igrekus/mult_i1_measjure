@@ -38,7 +38,9 @@ class MainWindow(QMainWindow):
     def _init(self):
         self._connectionWidget.connected.connect(self.on_instrumens_connected)
         self._connectionWidget.connected.connect(self._measureWidget.on_instrumentsConnected)
+
         self._measureWidget.selectedChanged.connect(self._controlModel.on_deviceChanged)
+        self._measureWidget.secondaryChanged.connect(self._controlModel.on_secondaryChanged)
 
         self._measureWidget.measureComplete.connect(self._measureModel.update)
 
@@ -47,7 +49,7 @@ class MainWindow(QMainWindow):
         self.refreshView()
 
         # TODO HACK to force device selection to trigger control table update
-        self._measureWidget._devices._combo.setCurrentIndex(9)
+        self._measureWidget._devices._combo.setCurrentIndex(1)
 
         self._updatePowCombo()
 

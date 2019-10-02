@@ -13,10 +13,17 @@ class ControlModel(QAbstractTableModel):
 
         # self._init()
 
-    def _init(self, value):
+    def _init(self, value, second=0):
+        self.beginResetModel()
+
         self._params = self._controller.deviceParams[value]
 
-        self._data = [[i + 1, f, 1, 2, 3] for i, f in enumerate(self._params['F'])]
+        if len(self._params['F']) != 3:
+            self._data = []
+            return
+
+        self._data = [[i + 1, f, 1, 2, 3] for i, f in enumerate(self._params['F'][second])]
+        self.endResetModel()
 
     def headerData(self, section, orientation, role=None):
         if orientation == Qt.Horizontal:
@@ -65,6 +72,8 @@ class ControlModel(QAbstractTableModel):
 
     @pyqtSlot(str)
     def on_deviceChanged(self, value):
-        self.beginResetModel()
         self._init(value)
-        self.endResetModel()
+
+    @pyqtSlot(str, int)
+    def on_secondaryChanged(self, first, second):
+        self._init(first, second)

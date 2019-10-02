@@ -120,6 +120,8 @@ class MeasureWidget(QWidget):
 
 
 class MeasureWidgetWithSecondaryParameters(MeasureWidget):
+    secondaryChanged = pyqtSignal(str, int)
+
     def __init__(self, parent=None, controller=None):
         super().__init__(parent=parent, controller=controller)
 
@@ -169,3 +171,4 @@ class MeasureWidgetWithSecondaryParameters(MeasureWidget):
     @pyqtSlot(int)
     def on_paramCombo_indexChanged(self, value):
         self._selectedSecondaryParam = value
+        self.secondaryChanged.emit(self._selectedDevice, value)
