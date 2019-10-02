@@ -271,7 +271,7 @@ class InstrumentController(QObject):
         is_active = param['Istat'][0] is not None
         if is_active:
             self._instruments['Источник питания'].send('*RST')
-            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
+            self._instruments['Источник питания'].set_current(chan=1, value=450, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
@@ -365,7 +365,7 @@ class InstrumentController(QObject):
         if is_active:
             center_freq = param['F'][secondary][6]
             self._instruments['Источник питания'].send('*RST')
-            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
+            self._instruments['Источник питания'].set_current(chan=1, value=450, unit='mA')
             self._instruments['Источник питания'].set_voltage(chan=1, value=5.55, unit='V')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
@@ -495,7 +495,7 @@ class InstrumentController(QObject):
 
         if is_active:
             self._instruments['Источник питания'].set_voltage(chan=1, value=4.45, unit='V')
-            self._instruments['Источник питания'].set_current(chan=1, value=300, unit='mA')
+            self._instruments['Источник питания'].set_current(chan=1, value=450, unit='mA')
             self._instruments['Источник питания'].set_output(chan=1, state='ON')
 
             curr = int(MeasureResultMock.generate_value(param['Idyn'][secondary]) * 10)
